@@ -1,7 +1,7 @@
 """
   Serialize function for SQLAlchemy models
 """
-
+from sqlalchemy.orm import ColumnProperty
 """
     List of data type who need a particular serialization
     @TODO MISSING FLOAT
@@ -27,15 +27,40 @@ def serializable(cls):
         Liste des propriétés sérialisables de la classe
         associées à leur sérializer en fonction de leur type
     """
-    cls_db_columns = [
-        (
-            db_col.key,
-            SERIALIZERS.get(db_col.type.__class__.__name__.lower(), lambda x: x),
-        )
-        for db_col in cls.__mapper__.c
-        if not db_col.type.__class__.__name__ == "Geometry"
-    ]
+    cls_db_columns = []
+    for prop in cls.__mapper__.column_attrs:
+        if isinstance(prop, ColumnProperty) and len(prop.columns) == 1:
+            db_col = prop.columns[0]
+            # HACK
+            #  -> Récupération du nom de l'attribut sans la classe
+            name = str(prop).split('.', 1)[1]
+            if not db_col.type.__class__.__name__ == 'Geometry':
+                cls_db_columns.append((
+                    name,
+                    SERIALIZERS.get(
+                        db_col.type.__class__.__name__.lower(),
+                        lambda x: x
+                    )
+                ))
+    """
+        Liste des propriétés synonymes
+        sérialisables de la classe
+        associées à leur sérializer en fonction de leur type
+    """
+    for syn in cls.__mapper__.synonyms:
+        col = cls.__mapper__.c[syn.name]
+        # if column type is geometry pass
+        if col.type.__class__.__name__ == 'Geometry':
+            pass
 
+        # else add synonyms in columns properties
+        cls_db_columns.append((
+            syn.key,
+            SERIALIZERS.get(
+                col.type.__class__.__name__.lower(),
+                lambda x: x
+            )
+        ))
     """
         Liste des propriétés de type relationship
         uselist permet de savoir si c'est une collection de sous objet
@@ -70,7 +95,8 @@ def serializable(cls):
             )
         else:
             selected_relationship = cls_db_relationships
-        out = {item: _serializer(getattr(self, item)) for item, _serializer in fprops}
+        out = {item: _serializer(getattr(self, item))
+               for item, _serializer in fprops}
         if recursif is False:
             return out
 
