@@ -30,8 +30,7 @@ def serializable(cls):
     cls_db_columns = [
         (
             db_col.key,
-            SERIALIZERS.get(
-                db_col.type.__class__.__name__.lower(), lambda x: x),
+            SERIALIZERS.get(db_col.type.__class__.__name__.lower(), lambda x: x),
         )
         for db_col in cls.__mapper__.c
         if not db_col.type.__class__.__name__ == "Geometry"
@@ -71,8 +70,7 @@ def serializable(cls):
             )
         else:
             selected_relationship = cls_db_relationships
-        out = {item: _serializer(getattr(self, item))
-               for item, _serializer in fprops}
+        out = {item: _serializer(getattr(self, item)) for item, _serializer in fprops}
         if recursif is False:
             return out
 
