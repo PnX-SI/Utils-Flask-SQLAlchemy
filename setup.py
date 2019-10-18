@@ -18,7 +18,7 @@ setuptools.setup(
     name='utils-flask-sqlalchemy',
     version=get_version(),
     description="Python lib of tools for Flask and SQLAlchemy",
-    long_description=open('README.rst', encoding="utf-8").read().strip(),
+    long_description=open('README.md', encoding="utf-8").read().strip(),
     author="Les parcs nationaux de France",
     url='https://github.com/PnX-SI/Utils-Flask-SQLAlchemy',
     packages=setuptools.find_packages('src'),
