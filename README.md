@@ -2,7 +2,7 @@
 
 La librairie fournit des décorateurs pour faciliter le développement avec Flask et SQLAlchemy.
 
-Elle est composée de deux outils principaux :
+Elle est composée de trois outils principaux :
 
 - **Les serialisers**
 
