@@ -20,3 +20,7 @@ Le fichier contient des décorateurs de route Flask
 
 - Le décorateur `@json_resp` transforme l'objet retourné par la fonction en JSON.
 - Le décorateur `@csv_resp` tranforme l'objet retourné par la fonction en fichier CSV. La fonction doit retourner un tuple de ce format `(file_name, data, columns, separator)`
+
+* **Le mapping à la volée**
+
+Le fichier generic contient les classes GenericTable et GenericQuery permettant de faire des requête sans définir de modèle au préalable.
