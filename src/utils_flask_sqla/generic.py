@@ -2,6 +2,7 @@ from sqlalchemy import MetaData
 from flask_sqlalchemy import SQLAlchemy
 DB = SQLAlchemy()
 
+
 def testDataType(value, sqlType, paramName):
     """
         Test the type of a filter
@@ -45,7 +46,8 @@ def test_type_and_generate_query(param_name, value, model, q):
         try:
             return q.filter(col == int(value))
         except Exception as e:
-            raise GeonatureApiError("{0} must be an integer".format(param_name))
+            raise GeonatureApiError(
+                "{0} must be an integer".format(param_name))
     if sql_type == DB.Numeric or isinstance(sql_type, (DB.Numeric)):
         try:
             return q.filter(col == float(value))
@@ -96,7 +98,8 @@ class GenericTable:
         try:
             self.tableDef = meta.tables["{}.{}".format(schemaName, tableName)]
         except KeyError:
-            raise KeyError("table {}.{} doesn't exists".format(schemaName, tableName))
+            raise KeyError("table {}.{} doesn't exists".format(
+                schemaName, tableName))
 
         # Mise en place d'un mapping des colonnes en vue d'une sérialisation
         self.serialize_columns, self.db_cols = self.get_serialized_columns()
@@ -123,7 +126,8 @@ class GenericTable:
 
     def as_dict(self, data, columns=None):
         if columns:
-            fprops = list(filter(lambda d: d[0] in columns, self.serialize_columns))
+            fprops = list(
+                filter(lambda d: d[0] in columns, self.serialize_columns))
         else:
             fprops = self.serialize_columns
 
@@ -163,7 +167,8 @@ class GenericQuery:
 
     def build_query_filter(self, query, param_name, param_value):
         if param_name in self.view.tableDef.columns.keys():
-            query = query.filter(self.view.tableDef.columns[param_name] == param_value)
+            query = query.filter(
+                self.view.tableDef.columns[param_name] == param_value)
 
         if param_name.startswith("ilike_"):
             col = self.view.tableDef.columns[param_name[6:]]
@@ -200,7 +205,8 @@ class GenericQuery:
         # Ordonnancement
         if "orderby" in parameters:
             if parameters.get("orderby") in self.view.columns:
-                ordel_col = getattr(self.view.tableDef.columns, parameters["orderby"])
+                ordel_col = getattr(
+                    self.view.tableDef.columns, parameters["orderby"])
         else:
             return query
 
@@ -242,7 +248,7 @@ class GenericQuery:
         """
 
         data, nb_result_without_filter, nb_results = self.query()
-        
+
         results = [self.view.as_dict(d) for d in data]
 
         return {

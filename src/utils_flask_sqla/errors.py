@@ -8,6 +8,7 @@ class GeonatureApiError(Exception):
             raised_error,
             message
         )
+
     def to_dict(self):
         return {
             'message': self.message,
