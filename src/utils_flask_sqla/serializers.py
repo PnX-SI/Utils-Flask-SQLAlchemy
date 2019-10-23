@@ -113,5 +113,26 @@ def serializable(cls):
 
         return out
 
+    def populatefn(self, dict_in):
+        '''
+        Méthode qui initie les valeurs de l'objet à partir d'un dictionnaire
+
+        Parameters
+        ----------
+            dict_in : dictionnaire contenant les valeurs à passer à l'objet
+        '''
+
+        # populate cls_db_columns
+        for key in dict_in:
+            if key in cls_db_columns:
+                setattr(self, key, dict_in[key])
+
+        # TODO  relationship ??
+        #       test s'il manque des éléments requis ou NOT NULL
+
+        return True
+
     cls.as_dict = serializefn
+    cls.from_dict = populatefn
+
     return cls
