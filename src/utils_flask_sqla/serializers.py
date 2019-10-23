@@ -108,7 +108,8 @@ def serializable(cls):
                         for x in getattr(self, rel)
                     ]
                 else:
-                    out[rel] = getattr(self, rel).as_dict(recursif)
+                    out[rel] = getattr(self, rel).as_dict(
+                        recursif, relationships=relationships)
 
         return out
 
