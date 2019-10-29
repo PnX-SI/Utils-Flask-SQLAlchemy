@@ -122,9 +122,11 @@ def serializable(cls):
             dict_in : dictionnaire contenant les valeurs à passer à l'objet
         '''
 
+        cls_db_columns_key = list(map(lambda x : x[0], cls_db_columns))
+
         # populate cls_db_columns
         for key in dict_in:
-            if key in cls_db_columns:
+            if key in cls_db_columns_key:
                 setattr(self, key, dict_in[key])
 
         # TODO  relationship ??
