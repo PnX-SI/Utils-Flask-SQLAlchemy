@@ -3,6 +3,7 @@
 
 **Nouveautés**
 
+* Modification de json_resp pour les retours de tableau vide
 * Ajout des ``GenericTable`` et ``GenericQuery`` (en version simplifiée sans la gestion des géométries)
 * Ajout des exceptions GeonatureApiError
 * Ajout d'une methode from_dict
