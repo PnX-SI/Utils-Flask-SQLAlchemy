@@ -17,19 +17,20 @@ def json_resp_accept(accepted_list=[]):
         def _json_resp(*args, **kwargs):
             res = fn(*args, **kwargs)
             if isinstance(res, tuple):
-                res['accepted_list'] = accepted_list
-                return to_json_resp(*res)
+                return to_json_resp(*res, accepted_list=accepted_list)
             else:
-                return to_json_resp(res, accepted_list)
+                return to_json_resp(res, accepted_list=accepted_list)
 
         return _json_resp
     return json_resp
 
+
 json_resp = json_resp_accept()
 json_resp_accept_empty_list = json_resp_accept([[]])
 
+
 def to_json_resp(
-    res, status=200, filename=None, as_file=False, indent=None, extension="json", accepted_list = False
+    res, status=200, filename=None, as_file=False, indent=None, extension="json", accepted_list=[]
 ):
     if not ( res or res in accepted_list ) :
         status = 404
