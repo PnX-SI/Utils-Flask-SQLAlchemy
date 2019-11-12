@@ -4,8 +4,10 @@
 **Nouveautés**
 
 * Ajout des ``GenericTable`` et ``GenericQuery`` (en version simplifiée sans la gestion des géométries)
+* Ajout de l'instance sqlalchemy (DB) en paramètre de GenericQuery
 * Ajout des exceptions GeonatureApiError
 * Ajout d'une methode from_dict
+
 0.0.1 (2019-10-17)
 ------------------
 

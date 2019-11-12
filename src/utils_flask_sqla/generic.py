@@ -1,7 +1,9 @@
 from sqlalchemy import MetaData
 from flask_sqlalchemy import SQLAlchemy
-DB = SQLAlchemy()
-
+from .errors import GeonatureApiError
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.types import Integer, Date, DateTime, Numeric, Boolean
+from dateutil import parser
 
 def testDataType(value, sqlType, paramName):
     """
@@ -9,17 +11,17 @@ def testDataType(value, sqlType, paramName):
         #TODO: antipatern: should raise something which can be exect by the function which use it
         # and not return the error
     """
-    if sqlType == DB.Integer or isinstance(sqlType, (DB.Integer)):
+    if sqlType == Integer or isinstance(sqlType, (Integer)):
         try:
             int(value)
         except Exception as e:
             return "{0} must be an integer".format(paramName)
-    if sqlType == DB.Numeric or isinstance(sqlType, (DB.Numeric)):
+    if sqlType == Numeric or isinstance(sqlType, (Numeric)):
         try:
             float(value)
         except Exception as e:
             return "{0} must be an float (decimal separator .)".format(paramName)
-    elif sqlType == DB.DateTime or isinstance(sqlType, (DB.Date, DB.DateTime)):
+    elif sqlType == DateTime or isinstance(sqlType, (Date, DateTime)):
         try:
             dt = parser.parse(value)
         except Exception as e:
@@ -42,20 +44,20 @@ def test_type_and_generate_query(param_name, value, model, q):
     except AttributeError as error:
         raise GeonatureApiError(str(error))
     sql_type = col.type
-    if sql_type == DB.Integer or isinstance(sql_type, (DB.Integer)):
+    if sql_type == Integer or isinstance(sql_type, (Integer)):
         try:
             return q.filter(col == int(value))
         except Exception as e:
             raise GeonatureApiError(
                 "{0} must be an integer".format(param_name))
-    if sql_type == DB.Numeric or isinstance(sql_type, (DB.Numeric)):
+    if sql_type == Numeric or isinstance(sql_type, (Numeric)):
         try:
             return q.filter(col == float(value))
         except Exception as e:
             raise GeonatureApiError(
                 "{0} must be an float (decimal separator .)".format(param_name)
             )
-    if sql_type == DB.DateTime or isinstance(sql_type, (DB.Date, DB.DateTime)):
+    if sql_type == DateTime or isinstance(sql_type, (Date, DateTime)):
         try:
             return q.filter(col == parser.parse(value))
         except Exception as e:
@@ -63,7 +65,7 @@ def test_type_and_generate_query(param_name, value, model, q):
                 "{0} must be an date (yyyy-mm-dd)".format(param_name)
             )
 
-    if sql_type == DB.Boolean or isinstance(sql_type, DB.Boolean):
+    if sql_type == Boolean or isinstance(sql_type, Boolean):
         try:
             return q.filter(col.is_(bool(value)))
         except Exception:
@@ -91,8 +93,15 @@ class GenericTable:
             d'une vue avec la base de données par rétroingénierie
     """
 
-    def __init__(self, tableName, schemaName):
-        meta = MetaData(schema=schemaName, bind=DB.engine)
+    def __init__(self, tableName, schemaName, engine):
+        '''
+            params:
+                - tableName
+                - schemaName
+                - engine : sqlalchemy instance engine
+                    for exemple : DB.engine if DB = Sqlalchemy()
+        '''
+        meta = MetaData(schema=schemaName, bind=engine)
         meta.reflect(views=True)
 
         try:
@@ -141,20 +150,20 @@ class GenericQuery:
 
     def __init__(
         self,
-        db_session,
+        DB,
         tableName,
         schemaName,
-        filters,
+        filters=[],
         limit=100,
         offset=0,
     ):
-        self.db_session = db_session
+        self.DB = DB
         self.tableName = tableName
         self.schemaName = schemaName
         self.filters = filters
         self.limit = limit
         self.offset = offset
-        self.view = GenericTable(tableName, schemaName)
+        self.view = GenericTable(tableName, schemaName, DB.engine)
 
     def build_query_filters(self, query, parameters):
         """
@@ -178,7 +187,7 @@ class GenericQuery:
         if param_name.startswith("filter_d_"):
             col = self.view.tableDef.columns[param_name[12:]]
             col_type = col.type.__class__.__name__
-            test_type = testDataType(param_value, DB.DateTime, col)
+            test_type = testDataType(param_value, DateTime, col)
             if test_type:
                 raise GeonatureApiError(message=test_type)
             if col_type in ("Date", "DateTime", "TIMESTAMP"):
@@ -192,7 +201,7 @@ class GenericQuery:
         if param_name.startswith("filter_n_"):
             col = self.view.tableDef.columns[param_name[12:]]
             col_type = col.type.__class__.__name__
-            test_type = testDataType(param_value, DB.Numeric, col)
+            test_type = testDataType(param_value, Numeric, col)
             if test_type:
                 raise GeonatureApiError(message=test_type)
             if param_name.startswith("filter_n_up_"):
@@ -223,7 +232,7 @@ class GenericQuery:
         """
             Lance la requete et retourne l'objet sqlalchemy
         """
-        q = self.db_session.query(self.view.tableDef)
+        q = self.DB.session.query(self.view.tableDef)
         nb_result_without_filter = q.count()
 
         if self.filters:
@@ -289,11 +298,11 @@ def serializeQueryTest(data, column_def):
         inter = {}
         for c in column_def:
             if getattr(row, c["name"]) is not None:
-                if isinstance(c["type"], (DB.Date, DB.DateTime, UUID)):
-                    inter[c["name"]] = str(getattr(row, c["name"]))
-                elif isinstance(c["type"], DB.Numeric):
+                if isinstance(c["type"], (Date, DateTime, UUID)):
+                    inter[c["name"] ] = str(getattr(row, c["name"]))
+                elif isinstance(c["type"], Numeric):
                     inter[c["name"]] = float(getattr(row, c["name"]))
-                elif not isinstance(c["type"], Geometry):
-                    inter[c["name"]] = getattr(row, c["name"])
+                # elif not isinstance(c["type"], Geometry):
+                    # inter[c["name"]] = getattr(row, c["name"])
         rows.append(inter)
     return rows
