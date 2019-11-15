@@ -7,6 +7,7 @@ from sqlalchemy.orm import ColumnProperty
     @TODO MISSING FLOAT
 """
 SERIALIZERS = {
+    "unicode": lambda x: x.strip() if x else None,
     "date": lambda x: str(x) if x else None,
     "datetime": lambda x: str(x) if x else None,
     "time": lambda x: str(x) if x else None,
