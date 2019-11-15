@@ -4,7 +4,7 @@
 **Nouveautés**
 
 
-* Trim sur les typed de champs character varying à longueur déterminée
+* Trim sur les typed de champs de type character
 * Ajout de json_reps_accept pour definir les reponse qui ne renvoient pas un code erreur, ne modifie pas json_resp
 * Ajout des ``GenericTable`` et ``GenericQuery`` (en version simplifiée sans la gestion des géométries)
 * Ajout de l'instance sqlalchemy (DB) en paramètre de GenericQuery
