@@ -2,6 +2,7 @@
   Serialize function for SQLAlchemy models
 """
 from sqlalchemy.orm import ColumnProperty
+from uuid import UUID
 """
     List of data type who need a particular serialization
     @TODO MISSING FLOAT
@@ -13,6 +14,7 @@ SERIALIZERS = {
     "timestamp": lambda x: str(x) if x else None,
     "uuid": lambda x: str(x) if x else None,
     "numeric": lambda x: str(x) if x else None,
+    "integer": lambda x: str(x) if isinstance(x, UUID) else x
 }
 
 
