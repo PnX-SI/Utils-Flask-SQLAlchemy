@@ -8,6 +8,7 @@
 * Ajout de l'instance sqlalchemy (DB) en paramètre de GenericQuery
 * Ajout des exceptions GeonatureApiError
 * Ajout d'une methode from_dict
+* gestion des uuid qui arrivent comme des integer dans les fonctions de sérialisation
 
 0.0.1 (2019-10-17)
 ------------------
