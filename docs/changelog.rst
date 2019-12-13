@@ -8,6 +8,7 @@
 * Ajout de l'instance sqlalchemy (DB) en paramètre de GenericQuery
 * Ajout des exceptions GeonatureApiError
 * Ajout d'une methode from_dict
+* Modification de as_dict : le parametre recursif peut etre entier et precise le niveau de recursivite
 
 0.0.1 (2019-10-17)
 ------------------

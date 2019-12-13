@@ -77,14 +77,29 @@ def serializable(cls):
 
         Parameters
         ----------
-            recursif: boolean
-                Spécifie si on veut que les sous objet (relationship)
-                soit également sérialisé
+            recursif: boolean ou entier
+                si boolean:
+                    Spécifie si on veut que les sous-objets (relationship)
+                    soit également sérialisé
+                si entier niveau de récursion:
+                    0 juste l'objet
+                    1 l'objet et ses sous-objets
+                    2 ...
             columns: liste
                 liste des colonnes qui doivent être prises en compte
             relationships: liste
                 liste des relationships qui doivent être prise en compte
         """
+
+        # si recursif est un entier
+        #
+        if type(recursif) == type(1):
+            if recursif < 0:
+                return
+
+            # la recursivite des relations devient recursif-1
+            recursif -= 1
+
         if columns:
             fprops = list(filter(lambda d: d[0] in columns, cls_db_columns))
         else:
@@ -97,7 +112,8 @@ def serializable(cls):
             selected_relationship = cls_db_relationships
         out = {item: _serializer(getattr(self, item))
                for item, _serializer in fprops}
-        if recursif is False:
+
+        if not recursif or recursif < 0:
             return out
 
         for (rel, uselist) in selected_relationship:
