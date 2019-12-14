@@ -93,7 +93,9 @@ def serializable(cls):
 
         # si recursif est un entier
         #
-        if type(recursif) == type(1):
+        isInteger = type(recursif) == type(1)
+
+        if isInteger:
             if recursif < 0:
                 return
 
@@ -113,7 +115,7 @@ def serializable(cls):
         out = {item: _serializer(getattr(self, item))
                for item, _serializer in fprops}
 
-        if not recursif or recursif < 0:
+        if (isInteger and recursif < 0 ) or ( not isInteger and not recursif):
             return out
 
         for (rel, uselist) in selected_relationship:
