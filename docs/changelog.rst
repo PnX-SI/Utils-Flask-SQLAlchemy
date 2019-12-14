@@ -9,6 +9,7 @@
 * Ajout des exceptions GeonatureApiError
 * Ajout d'une methode from_dict
 * Modification de as_dict : le parametre recursif peut etre entier et precise le niveau de recursivite
+* Prise en compte des colonnes redefinies dans le cas d'un heritage
 
 0.0.1 (2019-10-17)
 ------------------
