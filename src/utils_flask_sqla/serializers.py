@@ -97,7 +97,7 @@ def serializable(cls):
                 liste des relationships qui doivent être prise en compte
         """
 
-        if depth >= 0:
+        if isinstance(depth, int) and depth >= 0:
             recursif = True
             depth -= 1
 
