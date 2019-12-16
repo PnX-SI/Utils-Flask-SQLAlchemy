@@ -121,34 +121,14 @@ def serializable(cls):
             if getattr(self, rel):
                 if uselist is True:
                     out[rel] = [
-                        as_dict_check_depth(
-                            x,
-                            recursif=recursif, relationships=relationships, depth=depth
-                        )
-                        # x.as_dict(recursif=recursif, depth=depth,relationships=relationships)
+                        x.as_dict(recursif=recursif, depth=depth,relationships=relationships)
                         for x in getattr(self, rel)
                     ]
                 else:
-                    out[rel] = as_dict_check_depth(
-                        getattr(self, rel),
-                        recursif=recursif, relationships=relationships, depth=depth
-                    )
-                    # out[rel] = getattr(self, rel).as_dict(
-                        # recursif=recursif, depth=depth, relationships=relationships)
+                    out[rel] = getattr(self, rel).as_dict(
+                        recursif=recursif, depth=depth, relationships=relationships)
 
         return out
-
-    # Patch pour les cas ou le paramètre depth n'est pas defini dans as_dict d'un element enfant
-    def as_dict_check_depth(elem, recursif=False, columns=(), relationships=(), depth=None):
-
-        if 'depth' in inspect.getfullargspec(elem.as_dict)[0]:
-            return elem.as_dict(
-                recursif=recursif, columns=columns, relationships=relationships, depth=depth
-                )
-        else:
-            return elem.as_dict(
-                recursif=recursif, columns=columns, relationships=relationships
-                )
 
     def populatefn(self, dict_in):
         '''
