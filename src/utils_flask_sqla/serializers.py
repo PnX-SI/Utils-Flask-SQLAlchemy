@@ -2,6 +2,7 @@
   Serialize function for SQLAlchemy models
 """
 from sqlalchemy.orm import ColumnProperty
+import inspect
 """
     List of data type who need a particular serialization
     @TODO MISSING FLOAT
@@ -73,36 +74,32 @@ def serializable(cls):
         (db_rel.key, db_rel.uselist) for db_rel in cls.__mapper__.relationships
     ]
 
-    def serializefn(self, recursif=False, columns=(), relationships=()):
+    def serializefn(self, recursif=False, columns=(), relationships=(), depth=None):
         """
         Méthode qui renvoie les données de l'objet sous la forme d'un dict
 
         Parameters
         ----------
-            recursif: boolean ou entier
-                si boolean:
+            recursif: boolean
                     Spécifie si on veut que les sous-objets (relationship)
-                    soit également sérialisé
-                si entier niveau de récursion:
+            depth: entier
+                spécifie le niveau de niveau de récursion:
                     0 juste l'objet
                     1 l'objet et ses sous-objets
                     2 ...
+                si depth est spécifié :
+                    recursif prend la valeur True
+                si depth n'est pas spécifié et recursif est à True :
+                    il n'y a pas de limite à la récursivité
             columns: liste
                 liste des colonnes qui doivent être prises en compte
             relationships: liste
                 liste des relationships qui doivent être prise en compte
         """
 
-        # si recursif est un entier
-        #
-        is_integer = not isinstance(recursif, bool) and isinstance(recursif, int)
-
-        if is_integer:
-            if recursif < 0:
-                return
-
-            # la recursivite des relations devient recursif-1
-            recursif -= 1
+        if depth >= 0:
+            recursif = True
+            depth -= 1
 
         if columns:
             fprops = list(filter(lambda d: d[0] in columns, cls_db_columns))
@@ -117,21 +114,41 @@ def serializable(cls):
         out = {item: _serializer(getattr(self, item))
                for item, _serializer in fprops}
 
-        if (is_integer and recursif < 0 ) or ( not is_integer and not recursif):
+        if (depth and depth < 0) or not recursif:
             return out
 
         for (rel, uselist) in selected_relationship:
             if getattr(self, rel):
                 if uselist is True:
                     out[rel] = [
-                        x.as_dict(recursif, relationships=relationships)
+                        as_dict_check_depth(
+                            x,
+                            recursif=recursif, relationships=relationships, depth=depth
+                        )
+                        # x.as_dict(recursif=recursif, depth=depth,relationships=relationships)
                         for x in getattr(self, rel)
                     ]
                 else:
-                    out[rel] = getattr(self, rel).as_dict(
-                        recursif, relationships=relationships)
+                    out[rel] = as_dict_check_depth(
+                        getattr(self, rel),
+                        recursif=recursif, relationships=relationships, depth=depth
+                    )
+                    # out[rel] = getattr(self, rel).as_dict(
+                        # recursif=recursif, depth=depth, relationships=relationships)
 
         return out
+
+    # Patch pour les cas ou le paramètre depth n'est pas defini dans as_dict d'un element enfant
+    def as_dict_check_depth(elem, recursif=False, columns=(), relationships=(), depth=None):
+
+        if 'depth' in inspect.getfullargspec(elem.as_dict)[0]:
+            return elem.as_dict(
+                recursif=recursif, columns=columns, relationships=relationships, depth=depth
+                )
+        else:
+            return elem.as_dict(
+                recursif=recursif, columns=columns, relationships=relationships
+                )
 
     def populatefn(self, dict_in):
         '''
