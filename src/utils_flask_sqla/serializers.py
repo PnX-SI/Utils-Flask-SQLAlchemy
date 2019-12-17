@@ -2,6 +2,7 @@
   Serialize function for SQLAlchemy models
 """
 from sqlalchemy.orm import ColumnProperty
+import inspect
 """
     List of data type who need a particular serialization
     @TODO MISSING FLOAT
@@ -73,20 +74,33 @@ def serializable(cls):
         (db_rel.key, db_rel.uselist) for db_rel in cls.__mapper__.relationships
     ]
 
-    def serializefn(self, recursif=False, columns=(), relationships=()):
+    def serializefn(self, recursif=False, columns=(), relationships=(), depth=None):
         """
         Méthode qui renvoie les données de l'objet sous la forme d'un dict
 
         Parameters
         ----------
             recursif: boolean
-                Spécifie si on veut que les sous objet (relationship)
-                soit également sérialisé
+                    Spécifie si on veut que les sous-objets (relationship)
+            depth: entier
+                spécifie le niveau de niveau de récursion:
+                    0 juste l'objet
+                    1 l'objet et ses sous-objets
+                    2 ...
+                si depth est spécifié :
+                    recursif prend la valeur True
+                si depth n'est pas spécifié et recursif est à True :
+                    il n'y a pas de limite à la récursivité
             columns: liste
                 liste des colonnes qui doivent être prises en compte
             relationships: liste
                 liste des relationships qui doivent être prise en compte
         """
+
+        if isinstance(depth, int) and depth >= 0:
+            recursif = True
+            depth -= 1
+
         if columns:
             fprops = list(filter(lambda d: d[0] in columns, cls_db_columns))
         else:
@@ -99,19 +113,20 @@ def serializable(cls):
             selected_relationship = cls_db_relationships
         out = {item: _serializer(getattr(self, item))
                for item, _serializer in fprops}
-        if recursif is False:
+
+        if (depth and depth < 0) or not recursif:
             return out
 
         for (rel, uselist) in selected_relationship:
             if getattr(self, rel):
                 if uselist is True:
                     out[rel] = [
-                        x.as_dict(recursif, relationships=relationships)
+                        x.as_dict(recursif=recursif, depth=depth,relationships=relationships)
                         for x in getattr(self, rel)
                     ]
                 else:
                     out[rel] = getattr(self, rel).as_dict(
-                        recursif, relationships=relationships)
+                        recursif=recursif, depth=depth, relationships=relationships)
 
         return out
 

@@ -8,6 +8,7 @@
 * Ajout de l'instance sqlalchemy (DB) en paramètre de GenericQuery
 * Ajout des exceptions GeonatureApiError
 * Ajout d'une methode from_dict
+* Modification de as_dict : ajout d'un parametre depth pour definir le niveau de récursivité
 * Prise en compte des colonnes redefinies dans le cas d'un heritage
 
 0.0.1 (2019-10-17)
