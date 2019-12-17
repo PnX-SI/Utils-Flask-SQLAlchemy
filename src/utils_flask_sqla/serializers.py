@@ -30,8 +30,10 @@ def serializable(cls):
     """
     cls_db_columns = []
     for prop in cls.__mapper__.column_attrs:
-        if isinstance(prop, ColumnProperty) and len(prop.columns) == 1:
-            db_col = prop.columns[0]
+        if isinstance(prop, ColumnProperty): # and len(prop.columns) == 1:
+            # -1 : si on est dans le cas d'un heritage on recupere le dernier element de prop
+            # qui correspond à la derniere redefinition de cette colonne
+            db_col = prop.columns[-1]
             # HACK
             #  -> Récupération du nom de l'attribut sans la classe
             name = str(prop).split('.', 1)[1]
