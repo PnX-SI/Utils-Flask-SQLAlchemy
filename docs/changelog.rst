@@ -6,7 +6,7 @@
 * Ajout de ``json_resp_accept`` pour définir les réponses qui ne renvoient pas un code erreur, ne modifie pas ``json_resp``
 * Ajout des ``GenericTable`` et ``GenericQuery`` (en version simplifiée sans la gestion des géométries)
 * Ajout de l'instance sqlalchemy (DB) en paramètre de GenericQuery
-* Ajout des exceptions GeonatureApiError
+* Ajout des exceptions UtilsSqlaError
 * Ajout d'une methode from_dict
 * Modification de as_dict : ajout d'un parametre depth pour definir le niveau de récursivité
 * Prise en compte des colonnes redefinies dans le cas d'un heritage
