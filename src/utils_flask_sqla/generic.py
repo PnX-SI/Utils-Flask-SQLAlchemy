@@ -147,6 +147,16 @@ class GenericTable:
 class GenericQuery:
     """
         Classe permettant de manipuler des objets GenericTable
+
+        params:
+            - DB: sqlalchemy instantce (DB if DB = Sqlalchemy())
+            - tableName
+            - schemaName
+            - filters: array of filter of the query
+            - engine : sqlalchemy instance engine
+                for exemple : DB.engine if DB = Sqlalchemy()
+            - limit
+            - offset
     """
 
     def __init__(
