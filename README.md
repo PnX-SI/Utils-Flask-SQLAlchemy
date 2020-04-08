@@ -12,7 +12,7 @@ Elle est composée de trois outils principaux :
 
   - `recursif` (boolean, default = False) : contrôle si la serialisation doit sérialiser les modèles enfants (relationships) de manière recursive
   - `columns` (iterable, default=()). Spécifie les colonnes qui doivent être présentes dans le dictionnaire en sortie. Par défaut toutes les colonnes sont prises.
-  - `columns` (iterable, default=()). Spécifie les relationnships qui doivent être présentes dans le dictionnaire en sortie. Par défaut toutes les relationships sont prises si `recursif=True`.
+  - `relationships` (iterable, default=()). Spécifie les relationnships qui doivent être présentes dans le dictionnaire en sortie. Par défaut toutes les relationships sont prises si `recursif=True`.
 
 * **Les réponses**
 
