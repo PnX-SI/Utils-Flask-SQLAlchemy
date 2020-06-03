@@ -10,6 +10,7 @@
 * Ajout d'une methode from_dict
 * Modification de as_dict : ajout d'un parametre depth pour definir le niveau de récursivité
 * Prise en compte des colonnes redefinies dans le cas d'un heritage
+* methode from_dict recursive pour renseigner les relations
 
 0.0.1 (2019-10-17)
 ------------------
