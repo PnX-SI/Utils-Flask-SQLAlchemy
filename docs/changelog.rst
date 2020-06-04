@@ -14,10 +14,10 @@
 * Ajout des ``GenericTable`` et ``GenericQuery`` (en version simplifiée sans la gestion des géométries)
 * Ajout de l'instance ``sqlalchemy (DB)`` en paramètre de ``GenericQuery``
 * Ajout des exceptions ``UtilsSqlaError``
-* Ajout d'une methode ``from_dict``
-* Modification de ``as_dict`` : ajout d'un parametre ``depth`` pour définir le niveau de récursivité
-* Prise en compte des colonnes redefinies dans le cas d'un heritage
-* Méthode ``from_dict`` recursive pour renseigner les relations
+* Ajout d'une méthode ``from_dict``
+* Modification de ``as_dict`` : ajout d'un paramètre ``depth`` pour définir le niveau de récursivité
+* Prise en compte des colonnes redéfinies dans le cas d'un héritage
+* Méthode ``from_dict`` récursive pour renseigner les relations
 
 0.0.1 (2019-10-17)
 ------------------
