@@ -1,10 +1,14 @@
 import json
+import datetime
+import uuid
 import csv
 import io
 from functools import wraps
 
 from flask import Response
 from werkzeug.datastructures import Headers
+
+from .serializers import SERIALIZERS
 
 def json_resp_accept(accepted_list=[]):
     def json_resp(fn):
@@ -32,6 +36,19 @@ json_resp_accept_empty_list = json_resp_accept([[]])
 def to_json_resp(
     res, status=200, filename=None, as_file=False, indent=None, extension="json", accepted_list=[]
 ):
+    
+    def additionnal_converter(o):
+        if isinstance(o, datetime.datetime):
+            return SERIALIZERS['datetime'](o)
+        if isinstance(o, datetime.date):
+            return SERIALIZERS['date'](o)
+        elif isinstance(o, datetime.time):
+            return SERIALIZERS['time'](o)
+        elif isinstance(o,uuid.UUID):
+            return SERIALIZERS['uuid'](o)
+        else :
+            raise TypeError( "{} is not JSON serializable".format(repr(o)) )
+    
     if not ( res or res in accepted_list ) :
         status = 404
         res = {"message": "not found"}
@@ -46,7 +63,7 @@ def to_json_resp(
             filename="export_{}.{}".format(filename, extension),
         )
     return Response(
-        json.dumps(res, ensure_ascii=False, indent=indent),
+        json.dumps(res, ensure_ascii=False, indent=indent, default=additionnal_converter),
         status=status,
         mimetype="application/json",
         headers=headers,
