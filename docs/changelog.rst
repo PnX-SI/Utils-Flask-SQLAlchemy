@@ -3,7 +3,7 @@
 
 **Nouveautés**
 
-* ``to_json`` sérialise désormais les ``datetime`` et ``UUID``
+* ``to_json`` sérialise désormais les ``datetime`` et ``UUID`` (par @jbdesbas)
 * Méthode ``from_dict`` récursive pour renseigner les relations
 
 0.1.0 (2019-12-18)
