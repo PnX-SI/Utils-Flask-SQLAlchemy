@@ -1,9 +1,10 @@
 from sqlalchemy import MetaData
 from flask_sqlalchemy import SQLAlchemy
-from .errors import GeonatureApiError
+from .errors import UtilsSqlaError
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.types import Integer, Date, DateTime, Numeric, Boolean
 from dateutil import parser
+
 
 def testDataType(value, sqlType, paramName):
     """
@@ -42,26 +43,26 @@ def test_type_and_generate_query(param_name, value, model, q):
     try:
         col = getattr(model, param_name)
     except AttributeError as error:
-        raise GeonatureApiError(str(error))
+        raise UtilsSqlaError(str(error))
     sql_type = col.type
     if sql_type == Integer or isinstance(sql_type, (Integer)):
         try:
             return q.filter(col == int(value))
         except Exception as e:
-            raise GeonatureApiError(
+            raise UtilsSqlaError(
                 "{0} must be an integer".format(param_name))
     if sql_type == Numeric or isinstance(sql_type, (Numeric)):
         try:
             return q.filter(col == float(value))
         except Exception as e:
-            raise GeonatureApiError(
+            raise UtilsSqlaError(
                 "{0} must be an float (decimal separator .)".format(param_name)
             )
     if sql_type == DateTime or isinstance(sql_type, (Date, DateTime)):
         try:
             return q.filter(col == parser.parse(value))
         except Exception as e:
-            raise GeonatureApiError(
+            raise UtilsSqlaError(
                 "{0} must be an date (yyyy-mm-dd)".format(param_name)
             )
 
@@ -69,7 +70,7 @@ def test_type_and_generate_query(param_name, value, model, q):
         try:
             return q.filter(col.is_(bool(value)))
         except Exception:
-            raise GeonatureApiError("{0} must be a boolean".format(param_name))
+            raise UtilsSqlaError("{0} must be a boolean".format(param_name))
 
 
 """
@@ -146,6 +147,16 @@ class GenericTable:
 class GenericQuery:
     """
         Classe permettant de manipuler des objets GenericTable
+
+        params:
+            - DB: sqlalchemy instantce (DB if DB = Sqlalchemy())
+            - tableName
+            - schemaName
+            - filters: array of filter of the query
+            - engine : sqlalchemy instance engine
+                for exemple : DB.engine if DB = Sqlalchemy()
+            - limit
+            - offset
     """
 
     def __init__(
@@ -189,7 +200,7 @@ class GenericQuery:
             col_type = col.type.__class__.__name__
             test_type = testDataType(param_value, DateTime, col)
             if test_type:
-                raise GeonatureApiError(message=test_type)
+                raise UtilsSqlaError(message=test_type)
             if col_type in ("Date", "DateTime", "TIMESTAMP"):
                 if param_name.startswith("filter_d_up_"):
                     query = query.filter(col >= param_value)
@@ -203,7 +214,7 @@ class GenericQuery:
             col_type = col.type.__class__.__name__
             test_type = testDataType(param_value, Numeric, col)
             if test_type:
-                raise GeonatureApiError(message=test_type)
+                raise UtilsSqlaError(message=test_type)
             if param_name.startswith("filter_n_up_"):
                 query = query.filter(col >= param_value)
             if param_name.startswith("filter_n_lo_"):
@@ -299,7 +310,7 @@ def serializeQueryTest(data, column_def):
         for c in column_def:
             if getattr(row, c["name"]) is not None:
                 if isinstance(c["type"], (Date, DateTime, UUID)):
-                    inter[c["name"] ] = str(getattr(row, c["name"]))
+                    inter[c["name"]] = str(getattr(row, c["name"]))
                 elif isinstance(c["type"], Numeric):
                     inter[c["name"]] = float(getattr(row, c["name"]))
                 # elif not isinstance(c["type"], Geometry):

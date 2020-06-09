@@ -1,14 +1,22 @@
-0.0.2 (2019-22-17)
--------------------------
+0.1.1 (unreleased)
+------------------
+
+**Corrections**
+
+* 
+
+0.1.0 (2019-12-18)
+------------------
 
 **Nouveautés**
 
-* Ajout de json_reps_accept pour definir les reponse qui ne renvoient pas un code erreur, ne modifie pas json_resp
+* Ajout de ``json_resp_accept`` pour définir les réponses qui ne renvoient pas un code erreur, ne modifie pas ``json_resp``
 * Ajout des ``GenericTable`` et ``GenericQuery`` (en version simplifiée sans la gestion des géométries)
-* Ajout de l'instance sqlalchemy (DB) en paramètre de GenericQuery
-* Ajout des exceptions GeonatureApiError
-* Ajout d'une methode from_dict
-* Modification de as_dict : ajout d'un parametre depth pour definir le niveau de récursivité
+* Ajout de l'instance ``sqlalchemy (DB)`` en paramètre de ``GenericQuery``
+* Ajout des exceptions ``UtilsSqlaError``
+* Modification de ``as_dict`` : ajout d'un paramètre ``depth`` pour définir le niveau de récursivité
+* Prise en compte des colonnes redéfinies dans le cas d'un héritage
+* Méthode ``from_dict`` récursive pour renseigner les relations
 
 0.0.1 (2019-10-17)
 ------------------

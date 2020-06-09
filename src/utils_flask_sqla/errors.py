@@ -1,4 +1,4 @@
-class GeonatureApiError(Exception):
+class UtilsSqlaError(Exception):
     def __init__(self, message, status_code=500):
         Exception.__init__(self)
         self.message = message
