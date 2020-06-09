@@ -1,9 +1,10 @@
 0.1.1 (unreleased)
 ------------------
 
-**Corrections**
+**Nouveautés**
 
-* 
+* ``to_json`` sérialise désormais les ``datetime`` et ``UUID``
+* Méthode ``from_dict`` récursive pour renseigner les relations
 
 0.1.0 (2019-12-18)
 ------------------
@@ -16,7 +17,6 @@
 * Ajout des exceptions ``UtilsSqlaError``
 * Modification de ``as_dict`` : ajout d'un paramètre ``depth`` pour définir le niveau de récursivité
 * Prise en compte des colonnes redéfinies dans le cas d'un héritage
-* Méthode ``from_dict`` récursive pour renseigner les relations
 
 0.0.1 (2019-10-17)
 ------------------
