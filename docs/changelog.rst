@@ -1,7 +1,7 @@
 0.1.1 (unreleased)
 ------------------
 
-**Nouveautés**
+**🚀 Nouveautés**
 
 * ``to_json`` sérialise désormais les ``datetime`` et ``UUID`` (par @jbdesbas)
 * Méthode ``from_dict`` récursive pour renseigner les relations
@@ -9,7 +9,7 @@
 0.1.0 (2019-12-18)
 ------------------
 
-**Nouveautés**
+**🚀 Nouveautés**
 
 * Ajout de ``json_resp_accept`` pour définir les réponses qui ne renvoient pas un code erreur, ne modifie pas ``json_resp``
 * Ajout des ``GenericTable`` et ``GenericQuery`` (en version simplifiée sans la gestion des géométries)
