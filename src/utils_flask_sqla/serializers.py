@@ -71,7 +71,7 @@ def serializable(cls):
         (OneToMany, ManyToOne ou ManyToMany)
     """
     cls_db_relationships = [
-        (db_rel.key, db_rel.uselist) for db_rel in cls.__mapper__.relationships
+        (db_rel.key, db_rel.uselist, db_rel.argument) for db_rel in cls.__mapper__.relationships
     ]
 
     def serializefn(self, recursif=False, columns=(), relationships=(), depth=None):
@@ -117,7 +117,7 @@ def serializable(cls):
         if (depth and depth < 0) or not recursif:
             return out
 
-        for (rel, uselist) in selected_relationship:
+        for (rel, uselist, _) in selected_relationship:
             if getattr(self, rel):
                 if uselist is True:
                     out[rel] = [
@@ -130,13 +130,15 @@ def serializable(cls):
 
         return out
 
-    def populatefn(self, dict_in):
+    def populatefn(self, dict_in, recursif=False):
         '''
         Méthode qui initie les valeurs de l'objet à partir d'un dictionnaire
 
         Parameters
         ----------
             dict_in : dictionnaire contenant les valeurs à passer à l'objet
+            recursif: si on renseigne les relationships
+
         '''
 
         cls_db_columns_key = list(map(lambda x : x[0], cls_db_columns))
@@ -149,9 +151,26 @@ def serializable(cls):
         # TODO  relationship ??
         #       test s'il manque des éléments requis ou NOT NULL
 
-        return True
+        if not recursif:
+                    return self
+
+        frel = cls_db_relationships
+
+        for (rel, uselist, argument) in frel:
+
+            v_obj = (
+                [argument().from_dict(dict_obj, recursif) for dict_obj in dict_in.get(rel, [])]
+                if uselist else
+                argument().from_dict(dict_in.get(rel, None), recursif)
+            )
+
+            # attribution de la relation
+            setattr(self, rel, v_obj)
+
+        return self
 
     cls.as_dict = serializefn
     cls.from_dict = populatefn
 
     return cls
+
