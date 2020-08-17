@@ -108,11 +108,11 @@ def serializable(cls):
                 filter(
                     lambda d:  (
                         (not (columns and d[0] not in columns)) and
-                        (not (exclude and d[0] in exclude)),
-                        cls_db_columns
-                    )
+                        (not (exclude and d[0] in exclude)) 
+                    ), cls_db_columns
                 )
             )
+
         else:
             fprops = cls_db_columns
 
@@ -121,9 +121,8 @@ def serializable(cls):
                 filter(
                     lambda d:   (
                         (not (relationships and d[0] not in relationships)) and
-                        (not (exclude and d[0] in exclude)),
-                        cls_db_relationships
-                    )
+                        (not (exclude and d[0] in exclude))
+                    ), cls_db_relationships
                 )
             )
         else:
