@@ -74,7 +74,7 @@ def serializable(cls):
         (db_rel.key, db_rel.uselist, db_rel.argument) for db_rel in cls.__mapper__.relationships
     ]
 
-    def serializefn(self, recursif=False, columns=(), relationships=(), depth=None, exclude=()):
+    def serializefn(self, recursif=False, columns=(), relationships=(), depth=None):
         """
         Méthode qui renvoie les données de l'objet sous la forme d'un dict
 
@@ -95,35 +95,21 @@ def serializable(cls):
                 liste des colonnes qui doivent être prises en compte
             relationships: liste
                 liste des relationships qui doivent être prise en compte
-            exclude: liste
-                liste des relations ou proprietes qui ne doivent pas etre prise en compte
         """
 
         if isinstance(depth, int) and depth >= 0:
             recursif = True
             depth -= 1
 
-        if columns or exclude:
-            fprops = list(
-                filter(
-                    lambda d:  (
-                        (not (columns and d[0] not in columns)) and
-                        (not (exclude and d[0] in exclude)) 
-                    ), cls_db_columns
-                )
-            )
+        if columns:
+            fprops = list(filter(lambda d: d[0] in columns, cls_db_columns))
 
         else:
             fprops = cls_db_columns
 
-        if relationships or exclude:
+        if relationships:
             selected_relationship = list(
-                filter(
-                    lambda d:   (
-                        (not (relationships and d[0] not in relationships)) and
-                        (not (exclude and d[0] in exclude))
-                    ), cls_db_relationships
-                )
+                filter(lambda d: d[0] in relationships, cls_db_relationships)
             )
         else:
             selected_relationship = cls_db_relationships
@@ -139,12 +125,12 @@ def serializable(cls):
             if getattr(self, rel):
                 if uselist is True:
                     out[rel] = [
-                        x.as_dict(recursif=recursif, depth=depth, relationships=relationships, exclude=exclude)
+                        x.as_dict(recursif=recursif, depth=depth, relationships=relationships)
                         for x in getattr(self, rel)
                     ]
                 else:
                     out[rel] = getattr(self, rel).as_dict(
-                        recursif=recursif, depth=depth, relationships=relationships, exclude=exclude)
+                        recursif=recursif, depth=depth, relationships=relationships)
 
         return out
 
