@@ -96,20 +96,35 @@ def serializable(cls):
             relationships: liste
                 liste des relationships qui doivent être prise en compte
             exclude: liste
-                liste des relation ou proprietes qui ne doivent pas etre prise en compte
+                liste des relations ou proprietes qui ne doivent pas etre prise en compte
         """
 
         if isinstance(depth, int) and depth >= 0:
             recursif = True
             depth -= 1
 
-        if columns:
-            fprops = list(filter(lambda d: d[0] in columns, cls_db_columns))
+        if columns or exclude:
+            fprops = list(
+                filter(
+                    lambda d:  (
+                        (not (columns and d[0] not in columns)) and
+                        (not (exclude and d[0] in exclude)),
+                        cls_db_columns
+                    )
+                )
+            )
         else:
             fprops = cls_db_columns
-        if relationships:
+
+        if relationships or exlcude:
             selected_relationship = list(
-                filter(lambda d: d[0] in relationships and d[0] not in exclude, cls_db_relationships)
+                filter(
+                    lambda d:   (
+                        (not (relationships and d[0] not in relationships)) and
+                        (not (exclude and d[0] in exclude)),
+                        cls_db_relationships
+                    )
+                )
             )
         else:
             selected_relationship = filter(lambda d: d[0] not in exclude, cls_db_relationships)
