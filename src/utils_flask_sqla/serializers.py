@@ -126,9 +126,11 @@ def serializable(cls):
                 )
             )
         else:
-            selected_relationship = filter(lambda d: d[0] not in exclude, cls_db_relationships)
+            selected_relationship = cls_db_relationships
+
         out = {item: _serializer(getattr(self, item))
                for item, _serializer in fprops}
+
 
         if (depth and depth < 0) or not recursif:
             return out
@@ -137,12 +139,12 @@ def serializable(cls):
             if getattr(self, rel):
                 if uselist is True:
                     out[rel] = [
-                        x.as_dict(recursif=recursif, depth=depth, relationships=relationships)
+                        x.as_dict(recursif=recursif, depth=depth, relationships=relationships, exclude=exclude)
                         for x in getattr(self, rel)
                     ]
                 else:
                     out[rel] = getattr(self, rel).as_dict(
-                        recursif=recursif, depth=depth, relationships=relationships)
+                        recursif=recursif, depth=depth, relationships=relationships, exclude=exclude)
 
         return out
 
