@@ -74,7 +74,7 @@ def serializable(cls):
         (db_rel.key, db_rel.uselist, db_rel.argument) for db_rel in cls.__mapper__.relationships
     ]
 
-    def serializefn(self, recursif=False, columns=(), relationships=(), depth=None):
+    def serializefn(self, recursif=False, columns=(), relationships=(), depth=None, exclude=()):
         """
         Méthode qui renvoie les données de l'objet sous la forme d'un dict
 
@@ -95,6 +95,8 @@ def serializable(cls):
                 liste des colonnes qui doivent être prises en compte
             relationships: liste
                 liste des relationships qui doivent être prise en compte
+            exclude: liste
+                liste des relation ou proprietes qui ne doivent pas etre prise en compte
         """
 
         if isinstance(depth, int) and depth >= 0:
@@ -107,10 +109,10 @@ def serializable(cls):
             fprops = cls_db_columns
         if relationships:
             selected_relationship = list(
-                filter(lambda d: d[0] in relationships, cls_db_relationships)
+                filter(lambda d: d[0] in relationships and d[0] not in exclude, cls_db_relationships)
             )
         else:
-            selected_relationship = cls_db_relationships
+            selected_relationship = filter(lambda d: d[0] not in exclude, cls_db_relationships)
         out = {item: _serializer(getattr(self, item))
                for item, _serializer in fprops}
 
@@ -121,7 +123,7 @@ def serializable(cls):
             if getattr(self, rel):
                 if uselist is True:
                     out[rel] = [
-                        x.as_dict(recursif=recursif, depth=depth,relationships=relationships)
+                        x.as_dict(recursif=recursif, depth=depth, relationships=relationships)
                         for x in getattr(self, rel)
                     ]
                 else:
