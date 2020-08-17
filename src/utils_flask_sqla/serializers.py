@@ -116,7 +116,7 @@ def serializable(cls):
         else:
             fprops = cls_db_columns
 
-        if relationships or exlcude:
+        if relationships or exclude:
             selected_relationship = list(
                 filter(
                     lambda d:   (
