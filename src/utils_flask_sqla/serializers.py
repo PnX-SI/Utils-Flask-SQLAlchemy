@@ -166,7 +166,6 @@ def serializable(cls):
                 continue
 
             values = dict_in.get(rel)
-
             if not values:
                 # check if None or {}
                 setattr(self, rel, [] if uselist else None)
@@ -178,7 +177,6 @@ def serializable(cls):
 
             # get id_field_name
             id_field_name = inspect(Model).primary_key[0].name
-
             # si on a pas une liste de dictionaires
             # -> on suppose qu'on a une liste d'id
             # test sur le premier element de la liste
@@ -190,6 +188,8 @@ def serializable(cls):
                     data[id_field_name] = id_value
                     values_inter.append(data)
                 values = values_inter
+
+
 
             # preload with id
             # pour faire une seule requête
@@ -216,7 +216,7 @@ def serializable(cls):
                 # si id_value est null
                 # creation -> on supprime id_value
                 if not id_value:
-                    data.pop(key)
+                    data.pop(id_field_name)
 
                 res = (
                     # si on a une id -> on recupère dans la liste preload_res_with_ids
@@ -231,7 +231,6 @@ def serializable(cls):
                     # sinon on cree une nouvelle instance
                     else Model()
                 )
-
                 if hasattr(res, 'from_dict'):
                     res.from_dict(data, recursif)
 
