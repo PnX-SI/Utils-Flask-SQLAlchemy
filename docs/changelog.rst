@@ -2,16 +2,14 @@
 CHANGELOG
 =========
 
-0.1.2 (unreleased)
+0.1.2 (2020-10-17)
 ------------------
 
 **🚀 Nouveautés**
 
-*
+* Amélioration de la fonction ``from_dict`` (possibilité de passer des ID aux relationships)
+* Mise à jour des dépendances (SQLAlchemy 1.3.19)
 
-**🐛 Corrections**
-
-* 
 
 0.1.1 (2020-06-17)
 ------------------
