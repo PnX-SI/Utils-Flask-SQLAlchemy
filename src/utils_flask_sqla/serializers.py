@@ -2,7 +2,8 @@
   Serialize function for SQLAlchemy models
 """
 from sqlalchemy.orm import ColumnProperty
-import inspect
+from sqlalchemy import inspect
+
 """
     List of data type who need a particular serialization
     @TODO MISSING FLOAT
@@ -30,7 +31,7 @@ def serializable(cls):
     """
     cls_db_columns = []
     for prop in cls.__mapper__.column_attrs:
-        if isinstance(prop, ColumnProperty): # and len(prop.columns) == 1:
+        if isinstance(prop, ColumnProperty):  # and len(prop.columns) == 1:
             # -1 : si on est dans le cas d'un heritage on recupere le dernier element de prop
             # qui correspond à la derniere redefinition de cette colonne
             db_col = prop.columns[-1]
@@ -71,7 +72,11 @@ def serializable(cls):
         (OneToMany, ManyToOne ou ManyToMany)
     """
     cls_db_relationships = [
-        (db_rel.key, db_rel.uselist, db_rel.argument) for db_rel in cls.__mapper__.relationships
+        (
+            db_rel.key,
+            db_rel.uselist,
+            getattr(cls, db_rel.key).mapper.class_
+        ) for db_rel in cls.__mapper__.relationships
     ]
 
     def serializefn(self, recursif=False, columns=(), relationships=(), depth=None):
@@ -103,20 +108,16 @@ def serializable(cls):
 
         if columns:
             fprops = list(filter(lambda d: d[0] in columns, cls_db_columns))
-
         else:
             fprops = cls_db_columns
-
         if relationships:
             selected_relationship = list(
                 filter(lambda d: d[0] in relationships, cls_db_relationships)
             )
         else:
             selected_relationship = cls_db_relationships
-
         out = {item: _serializer(getattr(self, item))
                for item, _serializer in fprops}
-
 
         if (depth and depth < 0) or not recursif:
             return out
@@ -145,31 +146,103 @@ def serializable(cls):
 
         '''
 
-        cls_db_columns_key = list(map(lambda x : x[0], cls_db_columns))
+        cls_db_columns_key = list(map(lambda x: x[0], cls_db_columns))
 
         # populate cls_db_columns
         for key in dict_in:
             if key in cls_db_columns_key:
                 setattr(self, key, dict_in[key])
 
-        # TODO  relationship ??
-        #       test s'il manque des éléments requis ou NOT NULL
-
+        # si non recursif, on ne traite pas les relationship
         if not recursif:
-                    return self
+            return self
 
+        # gestion des relationships
         frel = cls_db_relationships
 
-        for (rel, uselist, argument) in frel:
+        for (rel, uselist, Model) in frel:
 
-            v_obj = (
-                [argument().from_dict(dict_obj, recursif) for dict_obj in dict_in.get(rel, [])]
-                if uselist else
-                argument().from_dict(dict_in.get(rel, None), recursif)
+            if rel not in dict_in:
+                continue
+
+            values = dict_in.get(rel)
+            if not values:
+                # check if None or {}
+                setattr(self, rel, [] if uselist else None)
+                continue
+
+            # pour pouvoir traiter les cas uselist et not uselist de la même manière
+            if not uselist:
+                values = [values]
+
+            # get id_field_name
+            id_field_name = inspect(Model).primary_key[0].name
+            # si on a pas une liste de dictionaires
+            # -> on suppose qu'on a une liste d'id
+            # test sur le premier element de la liste
+            # on cree une liste [ ... { <id_field_name>: id_value } ... ]
+            if not isinstance(values[0], dict):
+                values_inter = []
+                for id_value in values:
+                    data = {}
+                    data[id_field_name] = id_value
+                    values_inter.append(data)
+                values = values_inter
+
+
+
+            # preload with id
+            # pour faire une seule requête
+            ids = filter(
+                lambda x: x,
+                map(
+                    lambda x: x.get(id_field_name),
+                    values
+                )
+            )
+            preload_res_with_ids = (
+                Model.query
+                .filter(getattr(Model, id_field_name).in_(ids))
+                .all()
             )
 
+            # resul
+            v_obj = []
+
+            for data in values:
+
+                id_value = data.get(id_field_name)
+
+                # si id_value est null
+                # creation -> on supprime id_value
+                if not id_value:
+                    data.pop(id_field_name)
+
+                res = (
+                    # si on a une id -> on recupère dans la liste preload_res_with_ids
+                    # TODO trouver un find plus propre ?
+                    list(
+                        filter(
+                            lambda x: getattr(x, id_field_name) == id_value,
+                            preload_res_with_ids
+                        )
+                    )[0]
+                    if id_value and len(preload_res_with_ids)
+                    # sinon on cree une nouvelle instance
+                    else Model()
+                )
+                if hasattr(res, 'from_dict'):
+                    res.from_dict(data, recursif)
+
+                v_obj.append(res)
+
             # attribution de la relation
-            setattr(self, rel, v_obj)
+            # si uselist est à false -> on prend le premier de la liste
+            setattr(
+                self,
+                rel,
+                v_obj if uselist else v_obj[0]
+            )
 
         return self
 
@@ -177,4 +250,3 @@ def serializable(cls):
     cls.from_dict = populatefn
 
     return cls
-
