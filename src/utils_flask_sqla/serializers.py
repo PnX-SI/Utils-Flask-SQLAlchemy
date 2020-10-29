@@ -149,8 +149,6 @@ def serializable(cls):
 
         '''
 
-        print('populate', self, dict_in)
-
         cls_db_columns_key = list(map(lambda x: x[0], cls_db_columns))
 
         # populate cls_db_columns
@@ -176,7 +174,6 @@ def serializable(cls):
             values = dict_in.get(rel)
             if not values:
                 # check if None or {}
-                print('set null', uselist, rel, Model, [] if uselist else 'None')
                 setattr(self, rel, [] if uselist else None)
                 continue
 
@@ -219,8 +216,6 @@ def serializable(cls):
                 ) == 0
             ]
             
-            print('values2', list(values2))
-
             query_filters = [
                 and_(
                         *[
@@ -231,12 +226,8 @@ def serializable(cls):
                 for v in values2
             ]
 
-            print('query_filters', query_filters)
-
             preload_res_with_ids = query.filter(or_(*query_filters)).all() if query_filters else []
             
-            print('preload', rel, len(query_filters), len(preload_res_with_ids), preload_res_with_ids)
-
             v_obj = []
 
             for data in values:
@@ -278,10 +269,6 @@ def serializable(cls):
                 rel,
                 v_obj if uselist else v_obj[0]
             )
-
-            print(self, rel, v_obj if uselist else v_obj[0])
-
-        print('end', self, self.as_dict(True))
 
         return self
 
