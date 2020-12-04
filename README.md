@@ -20,7 +20,8 @@ La méthode contient les paramètre suivants :
 
 Le fichier contient des décorateurs de route Flask :
 
-- Le décorateur ``@json_resp`` transforme l'objet retourné par la fonction en JSON.
+- Le décorateur ``@json_resp`` transforme l'objet retourné par la fonction en JSON. Renvoie une 404 si la valeur retournée par la fonction est None ou un tableau vide
+- Le décorateur ``@json_resp_accept_empty_list`` transforme l'objet retourné par la fonction en JSON. Renvoie  une 404 si la valeur retournée par la fonction est None et 200 si c'est un tableau vide
 - Le décorateur ``@csv_resp`` tranforme l'objet retourné par la fonction en fichier CSV. La fonction doit retourner un tuple de ce format ``(file_name, data, columns, separator)``
 
 ### Le mapping à la volée
