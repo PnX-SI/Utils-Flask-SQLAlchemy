@@ -56,7 +56,7 @@ def to_json_resp(
     extension="json",
     accepted_list=[],
 ):
-    if not (res or res in accepted_list):
+    if not (res or res in accepted_list) and status != 204:
         status = 404
         res = {"message": "not found"}
 
