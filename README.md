@@ -9,11 +9,15 @@ Elle est composée de trois outils principaux :
 ### Les serialisers
 
 Le décorateur de classe ``@serializable`` permet la sérialisation JSON d'objets Python issus des classes SQLAlchemy. Il rajoute dynamiquement une méthode ``as_dict()`` aux classes qu'il décore. Cette méthode transforme l'objet de la classe en dictionnaire en transformant les types Python non compatibles avec le format JSON. Pour cela, elle se base sur les types des colonnes décrits dans le modèle SQLAlchemy.
+
+Le décorateur ``@serializable`` peut être utilisé tel quel, ou être appelé avec les arguments suivants :
+
+- ``exclude`` (iterable, default=()). Spécifie les colonnes qui doivent être exclues lors de la sérialisation. Par défaut, toutes les colonnes sont sérialisées.
   
-La méthode contient les paramètre suivants :
+La méthode ``as_dict()`` contient les paramètre suivants :
 
 - ``recursif`` (boolean, default = False) : contrôle si la serialisation doit sérialiser les modèles enfants (relationships) de manière recursive
-- ``columns`` (iterable, default=()). Spécifie les colonnes qui doivent être présentes dans le dictionnaire en sortie. Par défaut toutes les colonnes sont prises.
+- ``columns`` (iterable, default=()). Spécifie les colonnes qui doivent être présentes dans le dictionnaire en sortie. Si non spécifié, le comportement par défaut du décorateur est adopté.
 - ``relationships`` (iterable, default=()). Spécifie les relationnships qui doivent être présentes dans le dictionnaire en sortie. Par défaut toutes les relationships sont prises si ``recursif=True``.
 
 ### Les réponses
