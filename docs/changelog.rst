@@ -2,6 +2,17 @@
 CHANGELOG
 =========
 
+0.1.3 (2021-01-27)
+------------------
+
+**🚀 Nouveautés**
+
+* Ajout du paramètre `exclude` (list) sur le décorateur `serializable` pour exclure une colonne de la sérialisation
+
+**🐛 Corrections**
+
+* Les dépendances du fichier requirements.txt ne sont plus fixé à une version
+
 0.1.2 (2020-10-17)
 ------------------
 
