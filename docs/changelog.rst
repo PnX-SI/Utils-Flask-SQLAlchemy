@@ -7,7 +7,7 @@ CHANGELOG
 
 **🚀 Nouveautés**
 
-* Le décorateur `@json_resp` accepte les réponse vide si le code passé est 204
+* Le décorateur `@json_resp` accepte les réponses vides si le code passé est 204
 
 
 0.1.3 (2021-01-27)
