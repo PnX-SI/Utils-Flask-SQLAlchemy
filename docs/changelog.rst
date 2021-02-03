@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+0.1.4 (2021-02-03)
+------------------
+
+**🚀 Nouveautés**
+
+* Le décorateur `@json_resp` accepte les réponse vide si le code passé est 204
+
+
 0.1.3 (2021-01-27)
 ------------------
 
