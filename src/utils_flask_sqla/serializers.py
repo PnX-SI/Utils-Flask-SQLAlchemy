@@ -165,7 +165,6 @@ def serializable(cls):
 
 
         for (rel, uselist, Model) in frel:
-
             # si non clé unique continue TODO
 
             if rel not in dict_in:
@@ -183,6 +182,7 @@ def serializable(cls):
 
             # get id_field_name
             
+
             id_field_names = [x.name for x in inspect(Model).primary_key]
 
             # si on a pas une liste de dictionaires
@@ -199,7 +199,6 @@ def serializable(cls):
                     data[id_field_names[0]] = id_value
                     values_inter.append(data)
                 values = values_inter
-
 
             query = (
                 Model.query
@@ -227,7 +226,7 @@ def serializable(cls):
             ]
 
             preload_res_with_ids = query.filter(or_(*query_filters)).all() if query_filters else []
-            
+
             v_obj = []
 
             for data in values:
@@ -242,21 +241,36 @@ def serializable(cls):
                         if id_field_name in data:
                             data.pop(id_field_name)
 
-                res = (
-                    # sinon on cree une nouvelle instance
-                    Model() if not (id_values_not_null and len(preload_res_with_ids))
-                    # si on a une id -> on recupère dans la liste preload_res_with_ids
-                    else [
-                            model
-                            for model in preload_res_with_ids
-                            if sum(
-                                [
-                                    getattr(model, id_field_name) != data.get(id_field_name)
-                                    for id_field_name in id_field_names
-                                ]
-                            ) == 0
-                        ][0]
-                )
+                res = [
+                        model
+                        for model in preload_res_with_ids
+                        if sum(
+                            [
+                                getattr(model, id_field_name) != data.get(id_field_name)
+                                for id_field_name in id_field_names
+                            ]
+                        ) == 0
+                ]
+                if res:
+                    res = res[0]
+                else: 
+                    res = Model()
+
+                # res = (
+                #     # sinon on cree une nouvelle instance
+                #     Model() if not (id_values_not_null and len(preload_res_with_ids))
+                #     # si on a une id -> on recupère dans la liste preload_res_with_ids
+                #     else [
+                #             model
+                #             for model in preload_res_with_ids
+                #             if sum(
+                #                 [
+                #                     getattr(model, id_field_name) != data.get(id_field_name)
+                #                     for id_field_name in id_field_names
+                #                 ]
+                #             ) == 0
+                #         ][0]
+                # )
                 if hasattr(res, 'from_dict'):
                     res.from_dict(data, recursif)
 
