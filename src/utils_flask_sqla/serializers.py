@@ -26,64 +26,68 @@ def get_serializable_decorator(exclude=[]):
             qui est basée sur le mapping SQLAlchemy
         """
 
-        """
-            Liste des propriétés sérialisables de la classe
-            associées à leur sérializer en fonction de leur type
-        """
-        cls_db_columns = []
-        for prop in cls.__mapper__.column_attrs:
-            if isinstance(prop, ColumnProperty):  # and len(prop.columns) == 1:
-                # -1 : si on est dans le cas d'un heritage on recupere le dernier element de prop
-                # qui correspond à la derniere redefinition de cette colonne
-                db_col = prop.columns[-1]
-                # HACK
-                #  -> Récupération du nom de l'attribut sans la classe
-                name = str(prop).split('.', 1)[1]
-                if db_col.type.__class__.__name__ == 'Geometry':
-                    continue
-                if name in exclude:
-                    continue
+        def get_cls_db_columns():
+            """
+                Liste des propriétés sérialisables de la classe
+                associées à leur sérializer en fonction de leur type
+            """
+            cls_db_columns = []
+            for prop in cls.__mapper__.column_attrs:
+                if isinstance(prop, ColumnProperty):  # and len(prop.columns) == 1:
+                    # -1 : si on est dans le cas d'un heritage on recupere le dernier element de prop
+                    # qui correspond à la derniere redefinition de cette colonne
+                    db_col = prop.columns[-1]
+                    # HACK
+                    #  -> Récupération du nom de l'attribut sans la classe
+                    name = str(prop).split('.', 1)[1]
+                    if db_col.type.__class__.__name__ == 'Geometry':
+                        continue
+                    if name in exclude:
+                        continue
+                    cls_db_columns.append((
+                        name,
+                        SERIALIZERS.get(
+                            db_col.type.__class__.__name__.lower(),
+                            lambda x: x
+                        )
+                    ))
+            """
+                Liste des propriétés synonymes
+                sérialisables de la classe
+                associées à leur sérializer en fonction de leur type
+            """
+            for syn in cls.__mapper__.synonyms:
+                col = cls.__mapper__.c[syn.name]
+                # if column type is geometry pass
+                if col.type.__class__.__name__ == 'Geometry':
+                    pass
+
+                # else add synonyms in columns properties
                 cls_db_columns.append((
-                    name,
+                    syn.key,
                     SERIALIZERS.get(
-                        db_col.type.__class__.__name__.lower(),
+                        col.type.__class__.__name__.lower(),
                         lambda x: x
                     )
                 ))
-        """
-            Liste des propriétés synonymes
-            sérialisables de la classe
-            associées à leur sérializer en fonction de leur type
-        """
-        for syn in cls.__mapper__.synonyms:
-            col = cls.__mapper__.c[syn.name]
-            # if column type is geometry pass
-            if col.type.__class__.__name__ == 'Geometry':
-                pass
+            return cls_db_columns
 
-            # else add synonyms in columns properties
-            cls_db_columns.append((
-                syn.key,
-                SERIALIZERS.get(
-                    col.type.__class__.__name__.lower(),
-                    lambda x: x
-                )
-            ))
-        """
-            Liste des propriétés de type relationship
-            uselist permet de savoir si c'est une collection de sous objet
-            sa valeur est déduite du type de relation
-            (OneToMany, ManyToOne ou ManyToMany)
-        """
-        cls_db_relationships = [
-            (
-                db_rel.key,
-                db_rel.uselist,
-                getattr(cls, db_rel.key).mapper.class_
-            ) for db_rel in cls.__mapper__.relationships
-        ]
+        def get_cls_db_relationships():
+            """
+                Liste des propriétés de type relationship
+                uselist permet de savoir si c'est une collection de sous objet
+                sa valeur est déduite du type de relation
+                (OneToMany, ManyToOne ou ManyToMany)
+            """
+            return [
+                (
+                    db_rel.key,
+                    db_rel.uselist,
+                    getattr(cls, db_rel.key).mapper.class_
+                ) for db_rel in cls.__mapper__.relationships
+            ]
 
-        def serializefn(self, recursif=False, columns=(), relationships=(), depth=None):
+        def serializefn(self, recursif=False, columns=(), exclude=[], relationships=(), depth=None):
             """
             Méthode qui renvoie les données de l'objet sous la forme d'un dict
 
@@ -111,15 +115,15 @@ def get_serializable_decorator(exclude=[]):
                 depth -= 1
 
             if columns:
-                fprops = list(filter(lambda d: d[0] in columns, cls_db_columns))
+                fprops = list(filter(lambda d: d[0] in columns, get_cls_db_columns()))
             else:
-                fprops = cls_db_columns
+                fprops = get_cls_db_columns()
             if relationships:
                 selected_relationship = list(
-                    filter(lambda d: d[0] in relationships, cls_db_relationships)
+                    filter(lambda d: d[0] in relationships, get_cls_db_relationships())
                 )
             else:
-                selected_relationship = cls_db_relationships
+                selected_relationship = get_cls_db_relationships()
             out = {item: _serializer(getattr(self, item))
                    for item, _serializer in fprops}
 
@@ -150,7 +154,7 @@ def get_serializable_decorator(exclude=[]):
 
             '''
 
-            cls_db_columns_key = list(map(lambda x: x[0], cls_db_columns))
+            cls_db_columns_key = list(map(lambda x: x[0], get_cls_db_columns()))
 
             # populate cls_db_columns
             for key in dict_in:
@@ -162,7 +166,7 @@ def get_serializable_decorator(exclude=[]):
                 return self
 
             # gestion des relationships
-            frel = cls_db_relationships
+            frel = get_cls_db_relationships()
 
             for (rel, uselist, Model) in frel:
 
