@@ -268,7 +268,7 @@ def get_serializable_decorator(exclude=[]):
 
 
 def serializable(*args, **kwargs):
-    if not kwargs and len(args) == 1 and isinstance(args[0], type): # e.g. @serializable
+    if not kwargs and len(args) == 1 and isinstance(args[0], type):  # e.g. @serializable
         return get_serializable_decorator()(args[0])
     else:
-        return get_serializable_decorator(*args, **kwargs) # e.g. @serializable(exclude=['field'])
+        return get_serializable_decorator(*args, **kwargs)  # e.g. @serializable(exclude=['field'])
