@@ -254,7 +254,13 @@ def get_serializable_decorator(exclude=[]):
 
             return self
 
-        cls.as_dict = serializefn
+        if hasattr(cls, 'as_dict'):
+            chainedfn = cls.as_dict
+            def overridedserializefn(self, *args, **kwargs):
+                return chainedfn(self, serializefn(self, *args, **kwargs))
+            cls.as_dict = overridedserializefn
+        else:
+            cls.as_dict = serializefn
         cls.from_dict = populatefn
 
         return cls
