@@ -121,27 +121,30 @@ def get_serializable_decorator(exclude=[]):
             else:
                 fprops = get_cls_db_columns()
             if relationships:
-                selected_relationship = list(
+                selected_relationships = list(
                     filter(lambda d: d[0] in relationships, get_cls_db_relationships())
                 )
             else:
-                selected_relationship = get_cls_db_relationships()
+                selected_relationships = get_cls_db_relationships()
             out = {item: _serializer(getattr(self, item))
                    for item, _serializer in fprops}
 
             if (depth and depth < 0) or not recursif:
                 return out
 
-            for (rel, uselist, _) in selected_relationship:
+            for (rel, uselist, _) in selected_relationships:
                 if getattr(self, rel):
+                    # we call the child as_dict with a relationships list which exclude the current model
+                    # this avoid infinite recursion when two models reference each other
+                    _relationships = list(filter(lambda r: r[0] != rel, selected_relationships))
                     if uselist is True:
                         out[rel] = [
-                            x.as_dict(recursif=recursif, depth=depth, relationships=relationships)
+                            x.as_dict(recursif=recursif, depth=depth, relationships=_relationships)
                             for x in getattr(self, rel)
                         ]
                     else:
                         out[rel] = getattr(self, rel).as_dict(
-                            recursif=recursif, depth=depth, relationships=relationships)
+                            recursif=recursif, depth=depth, relationships=_relationships)
 
             return out
 
