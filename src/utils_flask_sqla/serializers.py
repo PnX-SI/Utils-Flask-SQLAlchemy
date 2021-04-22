@@ -1,6 +1,8 @@
 """
   Serialize function for SQLAlchemy models
 """
+from inspect import signature
+
 from sqlalchemy.orm import ColumnProperty
 from sqlalchemy import inspect
 
@@ -254,7 +256,7 @@ def get_serializable_decorator(exclude=[]):
 
             return self
 
-        if hasattr(cls, 'as_dict'):
+        if hasattr(cls, 'as_dict') and len(signature(cls.as_dict).parameters) == 2:
             chainedfn = cls.as_dict
             def overridedserializefn(self, *args, **kwargs):
                 return chainedfn(self, serializefn(self, *args, **kwargs))
