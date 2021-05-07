@@ -136,7 +136,7 @@ def get_serializable_decorator(exclude=[]):
                 if getattr(self, rel):
                     # we call the child as_dict with a relationships list which exclude the current model
                     # this avoid infinite recursion when two models reference each other
-                    _relationships = list(filter(lambda r: r[0] != rel, selected_relationships))
+                    _relationships = list(filter(lambda r: r[0] != rel, relationships))
                     if uselist is True:
                         out[rel] = [
                             x.as_dict(recursif=recursif, depth=depth, relationships=_relationships)
