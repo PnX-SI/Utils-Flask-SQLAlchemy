@@ -2,9 +2,16 @@
   Serialize function for SQLAlchemy models
 """
 from inspect import signature
+from warnings import warn
+from collections import defaultdict
+from itertools import chain
 
 from sqlalchemy.orm import ColumnProperty
 from sqlalchemy import inspect
+from sqlalchemy.types import Integer, Boolean
+from sqlalchemy.types import BOOLEAN, BIGINT, FLOAT, INT, INTEGER, SMALLINT, REAL, NUMERIC
+from sqlalchemy.dialects.postgresql import HSTORE
+
 
 """
     List of data type who need a particular serialization
@@ -19,8 +26,21 @@ SERIALIZERS = {
     "numeric": lambda x: str(x) if x else None,
 }
 
+TYPE_SERIALIZERS = defaultdict(lambda: str)
+TYPE_SERIALIZERS[Integer] = lambda x: x
+TYPE_SERIALIZERS[INTEGER] = lambda x: x
+TYPE_SERIALIZERS[INT] = lambda x: x
+TYPE_SERIALIZERS[SMALLINT] = lambda x: x
+TYPE_SERIALIZERS[BIGINT] = lambda x: x
+TYPE_SERIALIZERS[FLOAT] = lambda x: x
+TYPE_SERIALIZERS[NUMERIC] = lambda x: x
+TYPE_SERIALIZERS[REAL] = lambda x: x
+TYPE_SERIALIZERS[Boolean] = lambda x: x
+TYPE_SERIALIZERS[BOOLEAN] = lambda x: x
+TYPE_SERIALIZERS[HSTORE] = lambda x: x
 
-def get_serializable_decorator(exclude=[]):
+
+def get_serializable_decorator(fields=[], exclude=[]):
     def _serializable(cls):
         """
             Décorateur de classe pour les DB.Models
@@ -38,6 +58,7 @@ def get_serializable_decorator(exclude=[]):
                 if isinstance(prop, ColumnProperty):  # and len(prop.columns) == 1:
                     # -1 : si on est dans le cas d'un heritage on recupere le dernier element de prop
                     # qui correspond à la derniere redefinition de cette colonne
+                    assert(len(prop.columns) == 1)
                     db_col = prop.columns[-1]
                     # HACK
                     #  -> Récupération du nom de l'attribut sans la classe
@@ -89,12 +110,31 @@ def get_serializable_decorator(exclude=[]):
                 ) for db_rel in cls.__mapper__.relationships
             ]
 
-        def serializefn(self, recursif=False, columns=(), exclude=[], relationships=(), depth=None):
+        def serializefn(self, recursif=False, columns=[], relationships=[],
+                        fields=fields, exclude=exclude, depth=None, _excluded_mappers=[]):
             """
             Méthode qui renvoie les données de l'objet sous la forme d'un dict
 
             Parameters
             ----------
+                fields: liste
+                    Liste des champs (colonne native ou relationship) à prendre en compte, e.g. :
+                        fields=['column1', 'column2', 'child1', 'child2']
+                    Si fields n’est pas spécifié, l’ensemble des colonnes sont sélectionnées.
+                    Les relationships doivent être explicitement spécifiées dans fields pour être
+                    prise en compte en plus des propres colonnes de l’objet, e.g. :
+                        fields=['child']
+                    Il est également possible de spécifier les champs d’une relationship
+                    à prendre en compte, sans limite de profondeur, avec un '.' :
+                        fields=['child.column1', 'child.otherchild.column2']
+                exclude: list
+                    Liste de champs à exclure.
+                    Les exclusions s’appliquent après la sélection des champs avec fields.
+                    Il est également possible d’utiliser la notation avec un '.', e.g. :
+                        fields=['child'],exclude=['child.column2']
+
+                Les arguments ci-après sont dépréciés en faveur de fields et exclude.
+
                 recursif: boolean
                         Spécifie si on veut que les sous-objets (relationship)
                 depth: entier
@@ -112,41 +152,94 @@ def get_serializable_decorator(exclude=[]):
                     liste des relationships qui doivent être prise en compte
             """
 
-            if isinstance(depth, int) and depth >= 0:
-                recursif = True
-                depth -= 1
+            mapper = inspect(cls)
 
             if columns:
-                fprops = list(filter(lambda d: d[0] in columns, get_cls_db_columns()))
-            else:
-                fprops = get_cls_db_columns()
+                warn("'columns' argument is deprecated. Please add columns to serialize "
+                     "directly in 'fields' argument.", DeprecationWarning)
+                fields = chain(fields, columns)
             if relationships:
-                selected_relationships = list(
-                    filter(lambda d: d[0] in relationships, get_cls_db_relationships())
-                )
-            else:
-                selected_relationships = get_cls_db_relationships()
-            out = {item: _serializer(getattr(self, item))
-                   for item, _serializer in fprops}
+                warn("'relationships' argument is deprecated. Please add relationships to serialize "
+                     "directly in 'fields' argument.", DeprecationWarning)
+                fields = chain(fields, relationships)
 
-            if (depth and depth < 0) or not recursif:
-                return out
+            if depth:
+                recursif = True
+            if recursif:
+                warn("'recursif' argument is deprecated. Please add relationships to serialize "
+                     "directly in 'fields' argument.", DeprecationWarning)
+                _excluded_mappers = _excluded_mappers + [ mapper ]
+                if depth is None or depth > 0:
+                    fields = chain(fields, [ rel.key for rel in mapper.relationships
+                                             if rel.key not in fields
+                                             and rel.mapper not in _excluded_mappers ])
+                    if depth:
+                        depth -= 1
 
-            for (rel, uselist, _) in selected_relationships:
-                if getattr(self, rel):
-                    # we call the child as_dict with a relationships list which exclude the current model
-                    # this avoid infinite recursion when two models reference each other
-                    _relationships = list(filter(lambda r: r[0] != rel, relationships))
-                    if uselist is True:
-                        out[rel] = [
-                            x.as_dict(recursif=recursif, depth=depth, relationships=_relationships)
-                            for x in getattr(self, rel)
-                        ]
+            fields = list(fields)
+            exclude = list(exclude)
+
+            # take 'a' instead of 'a.b'
+            firstlevel_fields = [ rel.split('.')[0] for rel in fields ]
+
+            for field in set([ f for f in fields if '.' not in f ]) \
+                    - { col.name for col in mapper.columns } \
+                    - { rel.key for rel in mapper.relationships }:
+                raise Exception(f"Field '{field}' does not exist on {cls}.")
+            for field in set([ f.split('.')[0] for f in fields if '.' in f ]) \
+                    - { rel.key for rel in mapper.relationships }:
+                raise Exception(f"Relationship '{field}' does not exist on {cls}.")
+
+
+            _columns = { key: col
+                         for key, col in mapper.columns.items()
+                         if key in fields }
+            _relationships = { key: rel
+                               for key, rel in mapper.relationships.items()
+                               if key in firstlevel_fields }
+            if not _columns:
+                _columns = mapper.columns
+            if exclude:
+                _columns = { key: col
+                             for key, col in _columns.items()
+                             if key not in exclude }
+                _relationships = { key: rel
+                                   for key, rel in _relationships.items()
+                                   if key not in exclude }
+
+            serialize_kwargs = {
+                'recursif': recursif,
+                'depth': depth,
+                '_excluded_mappers': _excluded_mappers,
+            }
+
+            data = {}
+            for key, col in _columns.items():
+                serialize = TYPE_SERIALIZERS[type(col.type)]
+                value = getattr(self, key)
+                data[key] = serialize(value) if value is not None else None
+            for key, rel in _relationships.items():
+                kwargs = serialize_kwargs.copy()
+                _fields = [ field.split('.', 1)[1]
+                            for field in fields
+                            if field.startswith(f'{key}.') ]
+                if _fields:
+                    kwargs['fields'] = _fields
+                _exclude = [ field.split('.', 1)[1]
+                             for field in exclude
+                             if field.startswith(f'{key}.') ]
+                if _exclude:
+                    kwargs['exclude'] = _exclude
+                if rel.uselist:
+                    data[key] = [ o.as_dict(**kwargs) for o in getattr(self, key) ]
+                else:
+                    rel_object = getattr(self, rel.key)
+                    if rel_object:
+                        data[rel.key] = rel_object.as_dict(**kwargs)
                     else:
-                        out[rel] = getattr(self, rel).as_dict(
-                            recursif=recursif, depth=depth, relationships=_relationships)
+                        data[rel.key] = None
+            return data
 
-            return out
 
         def populatefn(self, dict_in, recursif=False):
             '''
