@@ -1,0 +1,4 @@
+include VERSION
+include README.md
+include requirements.in
+include tox.ini
