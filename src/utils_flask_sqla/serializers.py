@@ -352,11 +352,19 @@ def get_serializable_decorator(fields=[], exclude=[]):
 
             return self
 
-        if hasattr(cls, 'as_dict') and len(signature(cls.as_dict).parameters) == 2:
-            chainedfn = cls.as_dict
-            def overridedserializefn(self, *args, **kwargs):
-                return chainedfn(self, serializefn(self, *args, **kwargs))
-            cls.as_dict = overridedserializefn
+        if hasattr(cls, 'as_dict'):
+            # the Model has a as_dict(self, data) method, which expects serialized data as argument
+            if len(signature(cls.as_dict).parameters) == 2:
+                userfn = cls.as_dict
+                def chainedserializefn(self, *args, **kwargs):
+                    return userfn(self, serializefn(self, *args, **kwargs))
+                cls.as_dict = chainedserializefn
+            # the Model has its own as_dict method, which will call super().as_dict() it-self
+            elif 'as_dict' in vars(cls):
+                pass
+            # the Model has a as_dict method inherited, we replace-it with the serializer which will take child fields into account
+            else:
+                cls.as_dict = serializefn
         else:
             cls.as_dict = serializefn
         cls.from_dict = populatefn
