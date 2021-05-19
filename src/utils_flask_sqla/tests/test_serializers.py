@@ -7,7 +7,7 @@ import json
 from jsonschema import validate
 
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.dialects.postgresql import UUID, HSTORE
+from sqlalchemy.dialects.postgresql import UUID, HSTORE, ARRAY, JSON, JSONB
 from sqlalchemy.orm import relationship
 from geoalchemy2 import Geometry
 
@@ -55,12 +55,17 @@ class TestSerializers:
             boolean = db.Column(db.Boolean)
             uuid = db.Column(UUID(as_uuid=True))
             hstore = db.Column(HSTORE)
+            array = db.Column(ARRAY(db.Integer))
+            json = db.Column(JSON)
+            jsonb = db.Column(JSONB)
             geom = db.Column(Geometry("GEOMETRY", 4326))
 
         o = TestModel(pk=1, string='string', unicode='unicode',
                          datetime=datetime.now(), boolean=True,
                          uuid=uuid4(), hstore={'a': ['b', 'c']},
-                         geom='POINT(6 10)')
+                         json={'a': [1, 2]},
+                         jsonb={'a': [1, 2]},
+                         array=[1, 2], geom='POINT(6 10)')
         d = o.as_dict()
         json.dumps(d)  # check dict is JSON-serializable
         validate(d, {
@@ -72,6 +77,9 @@ class TestSerializers:
                 'datetime': { 'type': 'string', },
                 'boolean': { 'type': 'boolean', },
                 'uuid': { 'type': 'string', },
+                'array': { 'type': 'array', },
+                'json': { 'type': 'object', },
+                'jsonb': { 'type': 'object', },
                 'hstore': {
                     'type': 'object',
                     'properties': {

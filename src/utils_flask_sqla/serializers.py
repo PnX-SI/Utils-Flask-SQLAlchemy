@@ -5,12 +5,11 @@ from inspect import signature
 from warnings import warn
 from collections import defaultdict
 from itertools import chain
+from uuid import UUID
+from datetime import datetime
 
 from sqlalchemy.orm import ColumnProperty
 from sqlalchemy import inspect
-from sqlalchemy.types import Integer, Boolean
-from sqlalchemy.types import BOOLEAN, BIGINT, FLOAT, INT, INTEGER, SMALLINT, REAL, NUMERIC
-from sqlalchemy.dialects.postgresql import HSTORE
 
 
 """
@@ -26,18 +25,10 @@ SERIALIZERS = {
     "numeric": lambda x: str(x) if x else None,
 }
 
-TYPE_SERIALIZERS = defaultdict(lambda: str)
-TYPE_SERIALIZERS[Integer] = lambda x: x
-TYPE_SERIALIZERS[INTEGER] = lambda x: x
-TYPE_SERIALIZERS[INT] = lambda x: x
-TYPE_SERIALIZERS[SMALLINT] = lambda x: x
-TYPE_SERIALIZERS[BIGINT] = lambda x: x
-TYPE_SERIALIZERS[FLOAT] = lambda x: x
-TYPE_SERIALIZERS[NUMERIC] = lambda x: x
-TYPE_SERIALIZERS[REAL] = lambda x: x
-TYPE_SERIALIZERS[Boolean] = lambda x: x
-TYPE_SERIALIZERS[BOOLEAN] = lambda x: x
-TYPE_SERIALIZERS[HSTORE] = lambda x: x
+TYPE_SERIALIZERS = {
+    datetime: str,
+    UUID: str,
+}
 
 
 def get_serializable_decorator(fields=[], exclude=[]):
@@ -223,9 +214,12 @@ def get_serializable_decorator(fields=[], exclude=[]):
 
             data = {}
             for key, col in _columns.items():
-                serialize = TYPE_SERIALIZERS[type(col.type)]
                 value = getattr(self, key)
-                data[key] = serialize(value) if value is not None else None
+                if value is not None:
+                    serializer = TYPE_SERIALIZERS.get(type(value))
+                    if serializer:
+                        value = serializer(value)
+                data[key] = value
             for key, rel in _relationships.items():
                 kwargs = serialize_kwargs.copy()
                 _fields = [ field.split('.', 1)[1]
