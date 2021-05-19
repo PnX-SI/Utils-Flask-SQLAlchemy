@@ -41,6 +41,9 @@ TYPE_SERIALIZERS[HSTORE] = lambda x: x
 
 
 def get_serializable_decorator(fields=[], exclude=[]):
+    default_fields = fields
+    default_exclude = exclude
+
     def _serializable(cls):
         """
             Décorateur de classe pour les DB.Models
@@ -111,7 +114,7 @@ def get_serializable_decorator(fields=[], exclude=[]):
             ]
 
         def serializefn(self, recursif=False, columns=[], relationships=[],
-                        fields=fields, exclude=exclude, depth=None, _excluded_mappers=[]):
+                        fields=None, exclude=None, depth=None, _excluded_mappers=[]):
             """
             Méthode qui renvoie les données de l'objet sous la forme d'un dict
 
@@ -153,6 +156,11 @@ def get_serializable_decorator(fields=[], exclude=[]):
             """
 
             mapper = inspect(cls)
+
+            if fields is None:
+                fields = default_fields
+            if exclude is None:
+                exclude = default_exclude
 
             if columns:
                 warn("'columns' argument is deprecated. Please add columns to serialize "
@@ -223,13 +231,11 @@ def get_serializable_decorator(fields=[], exclude=[]):
                 _fields = [ field.split('.', 1)[1]
                             for field in fields
                             if field.startswith(f'{key}.') ]
-                if _fields:
-                    kwargs['fields'] = _fields
+                kwargs['fields'] = _fields or None
                 _exclude = [ field.split('.', 1)[1]
                              for field in exclude
                              if field.startswith(f'{key}.') ]
-                if _exclude:
-                    kwargs['exclude'] = _exclude
+                kwargs['exclude'] = _exclude or None
                 if rel.uselist:
                     data[key] = [ o.as_dict(**kwargs) for o in getattr(self, key) ]
                 else:
@@ -370,6 +376,7 @@ def get_serializable_decorator(fields=[], exclude=[]):
         cls.from_dict = populatefn
 
         return cls
+
     return _serializable
 
 

@@ -344,6 +344,24 @@ class TestSerializers:
             }],
         }, d)
 
+        d = v.as_dict()
+        TestCase().assertDictEqual({
+            'pk': 1,
+        }, d)
+
+        d = u.as_dict(fields=None, exclude=None)
+        TestCase().assertDictEqual({
+            'pk': 1,
+            'v_set': [{
+                'pk': 1,
+            }],
+        }, d)
+
+        d = v.as_dict(fields=None, exclude=None)
+        TestCase().assertDictEqual({
+            'pk': 1,
+        }, d)
+
         d = u.as_dict(fields=[])
         TestCase().assertDictEqual({
             'pk': 1,
@@ -353,6 +371,25 @@ class TestSerializers:
         TestCase().assertDictEqual({
             'pk': 1,
             'u_pk': 1,
+        }, d)
+
+        d = v.as_dict(fields=['u.pk'])
+        TestCase().assertDictEqual({
+            'pk': 1,
+            'u': {
+                'pk': 1,
+            },
+        }, d)
+
+        d = v.as_dict(fields=['u'])  # use default U serialization parameters
+        TestCase().assertDictEqual({
+            'pk': 1,
+            'u': {
+                'pk': 1,
+                'v_set': [{
+                    'pk': 1,
+                }],
+            },
         }, d)
 
     def test_as_dict_override(self):
