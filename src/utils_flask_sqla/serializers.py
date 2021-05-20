@@ -8,6 +8,7 @@ from inspect import signature
 from warnings import warn
 from collections import defaultdict
 from itertools import chain
+from functools import lru_cache
 from uuid import UUID
 
 from flask.json import JSONEncoder
@@ -38,6 +39,8 @@ def get_serializable_decorator(fields=[], exclude=[]):
             Permet de rajouter la fonction as_dict
             qui est basée sur le mapping SQLAlchemy
         """
+
+        mapper = inspect(cls)
 
         def get_cls_db_columns():
             """
@@ -101,6 +104,37 @@ def get_serializable_decorator(fields=[], exclude=[]):
                 ) for db_rel in cls.__mapper__.relationships
             ]
 
+        @lru_cache(maxsize=None)
+        def get_columns_and_relationships(fields, exclude):
+            # take 'a' instead of 'a.b'
+            firstlevel_fields = [ rel.split('.')[0] for rel in fields ]
+
+            for field in set([ f for f in fields if '.' not in f ]) \
+                    - { col.name for col in mapper.columns } \
+                    - { rel.key for rel in mapper.relationships }:
+                raise Exception(f"Field '{field}' does not exist on {cls}.")
+            for field in set([ f.split('.')[0] for f in fields if '.' in f ]) \
+                    - { rel.key for rel in mapper.relationships }:
+                raise Exception(f"Relationship '{field}' does not exist on {cls}.")
+
+            _columns = { key: col
+                         for key, col in mapper.columns.items()
+                         if key in fields }
+            _relationships = { key: rel
+                               for key, rel in mapper.relationships.items()
+                               if key in firstlevel_fields }
+            if not _columns:
+                _columns = mapper.columns
+            if exclude:
+                _columns = { key: col
+                             for key, col in _columns.items()
+                             if key not in exclude }
+                _relationships = { key: rel
+                                   for key, rel in _relationships.items()
+                                   if key not in exclude }
+
+            return _columns, _relationships
+
         def serializefn(self, recursif=False, columns=[], relationships=[],
                         fields=None, exclude=None, depth=None, _excluded_mappers=[]):
             """
@@ -142,10 +176,6 @@ def get_serializable_decorator(fields=[], exclude=[]):
                 relationships: liste
                     liste des relationships qui doivent être prise en compte
             """
-
-            mapper = inspect(cls)
-            
-
             if fields is None:
                 fields = default_fields
             if exclude is None:
@@ -173,36 +203,10 @@ def get_serializable_decorator(fields=[], exclude=[]):
                     if depth:
                         depth -= 1
 
-            fields = list(fields)
-            exclude = list(exclude)
+            fields = frozenset(fields)
+            exclude = frozenset(exclude)
 
-            # take 'a' instead of 'a.b'
-            firstlevel_fields = [ rel.split('.')[0] for rel in fields ]
-
-            for field in set([ f for f in fields if '.' not in f ]) \
-                    - { col.name for col in mapper.columns } \
-                    - { rel.key for rel in mapper.relationships }:
-                raise Exception(f"Field '{field}' does not exist on {cls}.")
-            for field in set([ f.split('.')[0] for f in fields if '.' in f ]) \
-                    - { rel.key for rel in mapper.relationships }:
-                raise Exception(f"Relationship '{field}' does not exist on {cls}.")
-
-
-            _columns = { key: col
-                         for key, col in mapper.columns.items()
-                         if key in fields }
-            _relationships = { key: rel
-                               for key, rel in mapper.relationships.items()
-                               if key in firstlevel_fields }
-            if not _columns:
-                _columns = mapper.columns
-            if exclude:
-                _columns = { key: col
-                             for key, col in _columns.items()
-                             if key not in exclude }
-                _relationships = { key: rel
-                                   for key, rel in _relationships.items()
-                                   if key not in exclude }
+            _columns, _relationships = get_columns_and_relationships(fields, exclude)
 
             serialize_kwargs = {
                 'recursif': recursif,
