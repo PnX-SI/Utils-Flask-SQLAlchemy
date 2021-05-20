@@ -32,10 +32,6 @@ def get_serializable_decorator(fields=[], exclude=[]):
     default_fields = fields
     default_exclude = exclude
 
-    _columns = None
-    _relationships = None
-    _test = None
-
     def _serializable(cls):
         """
             Décorateur de classe pour les DB.Models
