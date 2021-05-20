@@ -4,7 +4,6 @@ from uuid import uuid4
 import pytest
 from unittest import TestCase
 import json
-from jsonschema import validate
 from shapely import wkt
 
 from flask_sqlalchemy import SQLAlchemy
@@ -12,7 +11,7 @@ from sqlalchemy.dialects.postgresql import UUID, HSTORE, ARRAY, JSON, JSONB
 from sqlalchemy.orm import relationship
 from geoalchemy2 import Geometry
 
-from utils_flask_sqla.serializers import serializable
+from utils_flask_sqla.serializers import serializable, CustomJSONEncoder
 
 
 db = SQLAlchemy()
@@ -61,39 +60,27 @@ class TestSerializers:
             jsonb = db.Column(JSONB)
             geom = db.Column(Geometry("GEOMETRY", 4326))
 
-        o = TestModel(pk=1, string='string', unicode='unicode',
-                         datetime=datetime.now(), boolean=True,
-                         uuid=uuid4(), hstore={'a': ['b', 'c']},
-                         json={'a': [1, 2]},
-                         jsonb={'a': [1, 2]},
-                         array=[1, 2], geom=wkt.loads('POINT(6 10)'))
+        now = datetime.now()
+        uuid = uuid4()
+        json_data = {'a': ['b', 'c']}
+        geom = wkt.loads('POINT(6 10)')
+        kwargs = dict(pk=1,
+                      string='string',
+                      unicode='unicode',
+                      datetime=datetime.now(),
+                      boolean=True,
+                      uuid=uuid,
+                      hstore={'a': ['b', 'c']},
+                      json={'e': [1, 2]},
+                      jsonb=[3, {'f': 'g'}],
+                      array=[1, 2],
+                      geom=geom)
+        o = TestModel(**kwargs)
         d = o.as_dict()
-        json.dumps(d)  # check dict is JSON-serializable
-        validate(d, {
-            'type': 'object',
-            'properties': {
-                'pk': { 'type': 'integer', },
-                'string': { 'type': 'string', },
-                'unicode': { 'type': 'string', },
-                'datetime': { 'type': 'string', },
-                'boolean': { 'type': 'boolean', },
-                'uuid': { 'type': 'string', },
-                'array': { 'type': 'array', },
-                'json': { 'type': 'object', },
-                'jsonb': { 'type': 'object', },
-                'hstore': {
-                    'type': 'object',
-                    'properties': {
-                        'a': {
-                            'type': 'array',
-                            'items': { 'type': 'string', },
-                        },
-                    },
-                },
-            },
-            'minProperties': 10,
-            'additionalProperties': False,
-        })
+        TestCase().assertDictEqual(kwargs, d)
+
+        d = o.as_dict(exclude=['geom'])
+        json.dumps(d, cls=CustomJSONEncoder)  # check dict is JSON-serializable
 
     def test_many_to_one(self):
         parent = Parent(pk=1)

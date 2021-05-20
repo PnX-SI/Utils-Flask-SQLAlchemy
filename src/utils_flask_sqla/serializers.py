@@ -28,16 +28,6 @@ SERIALIZERS = {
     "numeric": lambda x: str(x) if x else None,
 }
 
-TYPE_SERIALIZERS = {
-    datetime.datetime: str,
-    UUID: str,
-}
-
-def is_col_ignored(col):
-    if col.type.__class__.__name__ == 'Geometry':
-        return True
-    return False
-
 def get_serializable_decorator(fields=[], exclude=[]):
     default_fields = fields
     default_exclude = exclude
@@ -226,10 +216,7 @@ def get_serializable_decorator(fields=[], exclude=[]):
 
             data = {}
             for key, col in _columns.items():
-                if is_col_ignored(col):
-                    continue
-                value = getattr(self, key)
-                data[key] = value
+                data[key] = getattr(self, key)
             for key, rel in _relationships.items():
                 kwargs = serialize_kwargs.copy()
                 _fields = [ field.split('.', 1)[1]
@@ -395,7 +382,7 @@ class CustomJSONEncoder(JSONEncoder):
     def default(self, o):
         try:
             if isinstance(o, datetime.time):
-                return SERIALIZERS["time"](o)
+                return str(o) if o is not None else None
         except TypeError:
             pass
-        return JSONEncoder.default(self, o) 
+        return JSONEncoder.default(self, o)
