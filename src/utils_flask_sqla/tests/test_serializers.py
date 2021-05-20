@@ -5,6 +5,7 @@ import pytest
 from unittest import TestCase
 import json
 from jsonschema import validate
+from shapely import wkt
 
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.dialects.postgresql import UUID, HSTORE, ARRAY, JSON, JSONB
@@ -65,7 +66,7 @@ class TestSerializers:
                          uuid=uuid4(), hstore={'a': ['b', 'c']},
                          json={'a': [1, 2]},
                          jsonb={'a': [1, 2]},
-                         array=[1, 2], geom='POINT(6 10)')
+                         array=[1, 2], geom=wkt.loads('POINT(6 10)'))
         d = o.as_dict()
         json.dumps(d)  # check dict is JSON-serializable
         validate(d, {
@@ -89,9 +90,8 @@ class TestSerializers:
                         },
                     },
                 },
-                'geom': { 'type': 'string', },
             },
-            'minProperties': 8,
+            'minProperties': 10,
             'additionalProperties': False,
         })
 
