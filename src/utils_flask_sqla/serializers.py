@@ -1,13 +1,16 @@
 """
   Serialize function for SQLAlchemy models
 """
+import uuid
+import datetime
+
 from inspect import signature
 from warnings import warn
 from collections import defaultdict
 from itertools import chain
 from uuid import UUID
-from datetime import datetime
 
+from flask.json import JSONEncoder
 from sqlalchemy.orm import ColumnProperty
 from sqlalchemy import inspect
 
@@ -26,7 +29,7 @@ SERIALIZERS = {
 }
 
 TYPE_SERIALIZERS = {
-    datetime: str,
+    datetime.datetime: str,
     UUID: str,
 }
 
@@ -42,6 +45,10 @@ def get_geom_columns(columns):
 def get_serializable_decorator(fields=[], exclude=[]):
     default_fields = fields
     default_exclude = exclude
+
+    _columns = None
+    _relationships = None
+    _test = None
 
     def _serializable(cls):
         """
@@ -155,7 +162,7 @@ def get_serializable_decorator(fields=[], exclude=[]):
             """
 
             mapper = inspect(cls)
-
+            
 
             if fields is None:
                 fields = default_fields
@@ -225,10 +232,6 @@ def get_serializable_decorator(fields=[], exclude=[]):
             data = {}
             for key, col in _columns.items():
                 value = getattr(self, key)
-                if value is not None:
-                    serializer = TYPE_SERIALIZERS.get(type(value))
-                    if serializer:
-                        value = serializer(value)
                 data[key] = value
             for key, rel in _relationships.items():
                 kwargs = serialize_kwargs.copy()
@@ -389,3 +392,13 @@ def serializable(*args, **kwargs):
         return get_serializable_decorator()(args[0])
     else:
         return get_serializable_decorator(*args, **kwargs)  # e.g. @serializable(exclude=['field'])
+
+
+class CustomJSONEncoder(JSONEncoder):
+    def default(self, o):
+        try:
+            if isinstance(o, datetime.time):
+                return SERIALIZERS["time"](o)
+        except TypeError:
+            pass
+        return JSONEncoder.default(self, o) 
