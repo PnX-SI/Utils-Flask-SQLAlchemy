@@ -30,6 +30,14 @@ TYPE_SERIALIZERS = {
     UUID: str,
 }
 
+def get_geom_columns(columns):
+    geom_cols = []
+    for c in columns:
+        name = str(c).split('.', 1)[1]
+        if c.type.__class__.__name__ == 'Geometry':
+            geom_cols.append(name) 
+        continue
+    return geom_cols
 
 def get_serializable_decorator(fields=[], exclude=[]):
     default_fields = fields
@@ -148,6 +156,7 @@ def get_serializable_decorator(fields=[], exclude=[]):
 
             mapper = inspect(cls)
 
+
             if fields is None:
                 fields = default_fields
             if exclude is None:
@@ -176,7 +185,8 @@ def get_serializable_decorator(fields=[], exclude=[]):
                         depth -= 1
 
             fields = list(fields)
-            exclude = list(exclude)
+            # exclude geom columns anyway
+            exclude = list(chain(exclude, get_geom_columns(mapper.c)))
 
             # take 'a' instead of 'a.b'
             firstlevel_fields = [ rel.split('.')[0] for rel in fields ]
