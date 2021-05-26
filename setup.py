@@ -23,7 +23,9 @@ setuptools.setup(
     packages=setuptools.find_packages('src'),
     package_dir={'': 'src'},
     install_requires=requirements,
-    tests_require=['geoalchemy2', 'jsonschema'],
+    extras_require={
+        'tests': ['geoalchemy2', 'jsonschema'],
+    },
     classifiers=['Development Status :: 1 - Planning',
                  'Intended Audience :: Developers',
                  'Natural Language :: English',
