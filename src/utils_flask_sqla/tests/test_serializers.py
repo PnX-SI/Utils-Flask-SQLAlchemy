@@ -427,6 +427,11 @@ class TestSerializers:
                 data['t'] = True
                 return data
 
+        @serializable(exclude=['pk'])
+        @serializable
+        class U(O):
+            pass
+
         o = O(pk=1)
         d = o.as_dict()
         TestCase().assertDictEqual({
@@ -469,6 +474,10 @@ class TestSerializers:
             'o': True,
             't': True,
         }, d)
+
+        u = U(pk=7)
+        d = u.as_dict()
+        TestCase().assertDictEqual({}, d)
 
     def test_renamed_field(self):
         @serializable

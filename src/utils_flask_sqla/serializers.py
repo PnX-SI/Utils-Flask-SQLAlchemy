@@ -236,6 +236,7 @@ def get_serializable_decorator(fields=[], exclude=[]):
                     else:
                         data[rel.key] = None
             return data
+        serializefn.__original_decorator = True
 
 
         def populatefn(self, dict_in, recursif=False):
@@ -356,9 +357,14 @@ def get_serializable_decorator(fields=[], exclude=[]):
                 def chainedserializefn(self, *args, **kwargs):
                     return userfn(self, serializefn(self, *args, **kwargs))
                 cls.as_dict = chainedserializefn
-            # the Model has its own as_dict method, which will call super().as_dict() it-self
+            # the Model has its own as_dict method
             elif 'as_dict' in vars(cls):
-                pass
+                # the serialize decorator is applied a second time, possibly with new default arguments
+                if hasattr(cls.as_dict, '__original_decorator'):
+                    cls.as_dict = serializefn
+                # which will call super().as_dict() it-self
+                else:
+                    pass
             # the Model has a as_dict method inherited, we replace-it with the serializer which will take child fields into account
             else:
                 cls.as_dict = serializefn
