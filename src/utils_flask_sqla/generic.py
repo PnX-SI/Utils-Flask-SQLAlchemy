@@ -1,3 +1,6 @@
+from itertools import chain
+from warnings import warn
+
 from sqlalchemy import MetaData
 from flask_sqlalchemy import SQLAlchemy
 from .errors import UtilsSqlaError
@@ -134,14 +137,19 @@ class GenericTable:
             db_cols.append(db_col)
         return regular_serialize, db_cols
 
-    def as_dict(self, data, columns=None):
+    def as_dict(self, data, columns=[], fields=[]):
+        fields = list(chain(fields, columns))
         if columns:
+            warn("'columns' argument is deprecated. Please add columns to serialize "
+                    "directly in 'fields' argument.", DeprecationWarning)
+        if fields:
             fprops = list(
-                filter(lambda d: d[0] in columns, self.serialize_columns))
+                filter(lambda d: d[0] in fields, self.serialize_columns))
         else:
             fprops = self.serialize_columns
 
         return {item: _serializer(getattr(data, item)) for item, _serializer in fprops}
+
 
 
 class GenericQuery:
