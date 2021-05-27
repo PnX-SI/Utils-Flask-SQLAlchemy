@@ -2,6 +2,32 @@
 CHANGELOG
 =========
 
+0.2.0 (2021-05-27)
+------------------
+
+**🚀 Nouveautés**
+
+* Il est possible de surcoucher la méthode `as_dict` avec la signature suivante :
+
+::
+
+    def MyModel(db.Model):
+        def as_dict(self, data):
+            return data
+
+    Celle-ci reçoit alors les données sérialisées dans l’argument `data` et peut les modifier avant de les renvoyer.
+
+* Ajout de tests unitaires.
+* Ajout d’un encodeur JSON supportant les objets de type `time`.
+* Ajout des paramètres `fields` et `exclude`, supportant indifféremment les colonnes et relationships. Ces paramètres peuvent être utilisé en argument de la méthode `as_dict`, ou en argument du décorateur `@serializable` directement afin de définir des paramètres par défaut pour le modèle.
+* Dépréciation des paramètres `columns`, `relationships`, `recursif` et `depth`.
+
+**🐛 Corrections**
+
+* Le décorateur `@serializable` peut être utilisé lorsque le modèle n’est pas encore prêt (e.g. utilisation de `backref`).
+* Corrige un bug de récursion infinie lorsque 2 modèles se références.
+
+
 0.1.4 (2021-02-03)
 ------------------
 
