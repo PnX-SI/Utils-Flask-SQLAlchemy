@@ -359,8 +359,8 @@ def get_serializable_decorator(fields=[], exclude=[]):
                 cls.as_dict = chainedserializefn
             # the Model has its own as_dict method
             elif 'as_dict' in vars(cls):
-                # the serialize decorator is applied a second time, possibly with new default arguments
-                if hasattr(cls.as_dict, '__original_decorator'):
+                # the serialize decorator is applied a second time with new default arguments
+                if hasattr(cls.as_dict, '__original_decorator') and (default_fields or default_exclude):
                     cls.as_dict = serializefn
                 # which will call super().as_dict() it-self
                 else:
