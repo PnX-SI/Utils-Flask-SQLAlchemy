@@ -2,6 +2,21 @@
 CHANGELOG
 =========
 
+0.2.1 (2021-06-03)
+------------------
+
+**🐛 Corrections**
+
+* Gestion du cas suivant :
+
+::
+
+    @serializable
+    @geoserializable
+    def MyModel(db.Model):
+        pass
+
+
 0.2.0 (2021-05-27)
 ------------------
 
