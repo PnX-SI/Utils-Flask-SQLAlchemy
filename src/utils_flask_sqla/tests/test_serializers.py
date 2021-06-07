@@ -508,3 +508,48 @@ class TestSerializers:
             'parent_pk': None,
             'parent': None,
         }, d)
+
+    def test_polymorphic_model(self):
+        @serializable
+        class PolyModel(db.Model):
+            __mapper_args__ = {
+                'polymorphic_identity': 'IdentityBase',
+                'polymorphic_on': 'kind',
+            }
+            pk = db.Column(db.Integer, primary_key=True)
+            kind = db.Column(db.String)
+            base = db.Column(db.String)
+
+        @serializable
+        class PolyModelA(PolyModel):
+            __mapper_args__ = {
+                'polymorphic_identity': 'A',
+            }
+            pk = db.Column(db.Integer, db.ForeignKey(PolyModel.pk), primary_key=True)
+            a = db.Column(db.String)
+
+        @serializable
+        class PolyModelB(PolyModel):
+            __mapper_args__ = {
+                'polymorphic_identity': 'B',
+            }
+            pk = db.Column(db.Integer, db.ForeignKey(PolyModel.pk), primary_key=True)
+            b = db.Column(db.String)
+
+        a = PolyModelA(pk=1, base='BA', a='A')
+        d = a.as_dict()
+        TestCase().assertDictEqual({
+            'pk': 1,
+            'kind': 'A',
+            'base': 'BA',
+            'a': 'A',
+        }, d)
+
+        b = PolyModelB(pk=2, base='BB', b='B')
+        d = b.as_dict()
+        TestCase().assertDictEqual({
+            'pk': 2,
+            'kind': 'B',
+            'base': 'BB',
+            'b': 'B',
+        }, d)
