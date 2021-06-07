@@ -110,7 +110,7 @@ def get_serializable_decorator(fields=[], exclude=[]):
             firstlevel_fields = [ rel.split('.')[0] for rel in fields ]
 
             for field in set([ f for f in fields if '.' not in f ]) \
-                    - { col.name for col in mapper.columns } \
+                    - { col.key for col in mapper.column_attrs } \
                     - { rel.key for rel in mapper.relationships }:
                 raise Exception(f"Field '{field}' does not exist on {cls}.")
             for field in set([ f.split('.')[0] for f in fields if '.' in f ]) \
@@ -118,7 +118,7 @@ def get_serializable_decorator(fields=[], exclude=[]):
                 raise Exception(f"Relationship '{field}' does not exist on {cls}.")
 
             _columns = { key: col
-                         for key, col in mapper.columns.items()
+                         for key, col in mapper.column_attrs.items()
                          if key in fields }
             _relationships = { key: rel
                                for key, rel in mapper.relationships.items()
