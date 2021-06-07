@@ -6,7 +6,7 @@ import datetime
 
 from inspect import signature
 from warnings import warn
-from collections import defaultdict
+from collections import defaultdict, ChainMap
 from itertools import chain
 from functools import lru_cache
 from uuid import UUID
@@ -14,6 +14,7 @@ from uuid import UUID
 from flask.json import JSONEncoder
 from sqlalchemy.orm import ColumnProperty
 from sqlalchemy import inspect
+from sqlalchemy.ext.hybrid import HYBRID_PROPERTY
 
 
 """
@@ -108,22 +109,26 @@ def get_serializable_decorator(fields=[], exclude=[]):
             # take 'a' instead of 'a.b'
             firstlevel_fields = [ rel.split('.')[0] for rel in fields ]
 
+            hybrid_properties = { key: attr
+                                  for key, attr in mapper.all_orm_descriptors.items()
+                                  if attr.extension_type == HYBRID_PROPERTY }
             for field in set([ f for f in fields if '.' not in f ]) \
-                    - { col.key for col in mapper.column_attrs } \
-                    - { rel.key for rel in mapper.relationships }:
+                    - set(mapper.column_attrs.keys()) \
+                    - set(hybrid_properties.keys()) \
+                    - set(mapper.relationships.keys()):
                 raise Exception(f"Field '{field}' does not exist on {cls}.")
             for field in set([ f.split('.')[0] for f in fields if '.' in f ]) \
-                    - { rel.key for rel in mapper.relationships }:
+                    - set(mapper.relationships.keys()):
                 raise Exception(f"Relationship '{field}' does not exist on {cls}.")
 
             _columns = { key: col
-                         for key, col in mapper.column_attrs.items()
+                         for key, col in ChainMap(mapper.column_attrs, hybrid_properties).items()
                          if key in fields }
             _relationships = { key: rel
                                for key, rel in mapper.relationships.items()
                                if key in firstlevel_fields }
             if not _columns:
-                _columns = mapper.columns
+                _columns = ChainMap(mapper.column_attrs, hybrid_properties)
             if exclude:
                 _columns = { key: col
                              for key, col in _columns.items()

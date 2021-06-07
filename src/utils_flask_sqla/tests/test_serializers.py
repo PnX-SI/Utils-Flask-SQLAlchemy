@@ -7,6 +7,7 @@ import json
 from shapely import wkt
 
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.dialects.postgresql import UUID, HSTORE, ARRAY, JSON, JSONB
 from sqlalchemy.orm import relationship
 from geoalchemy2 import Geometry
@@ -552,4 +553,36 @@ class TestSerializers:
             'kind': 'B',
             'base': 'BB',
             'b': 'B',
+        }, d)
+
+        d = {
+            'pk': 2,
+            'kind': 'B',
+            'base': 'BB',
+            'b': 'B',
+        }
+        TestCase().assertDictEqual(d, PolyModelB().from_dict(d).as_dict())
+
+    def test_hybrid_property(self):
+        @serializable
+        class HybridModel(db.Model):
+            pk = db.Column(db.Integer, primary_key=True)
+            part1 = db.Column(db.String)
+            part2 = db.Column(db.String)
+
+            @hybrid_property
+            def concat(self):
+                return '{0} {1}'.format(self.part1, self.part2)
+
+            @concat.expression
+            def concat(cls):
+                return db.func.concat(cls.part1, ' ', cls.part2)
+
+        h = HybridModel(pk=1, part1='a', part2='b')
+        d = h.as_dict()
+        TestCase().assertDictEqual({
+            'pk': 1,
+            'part1': 'a',
+            'part2': 'b',
+            'concat': 'a b',
         }, d)
