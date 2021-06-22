@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+0.2.2 (2021-06-22)
+------------------
+
+**🐛 Corrections**
+
+* Support des propriétés hybrides des modèles 
+* Ajout de tests sur les modèles polymorphiques
+
 0.2.1 (2021-06-03)
 ------------------
 
