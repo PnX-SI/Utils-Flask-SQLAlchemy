@@ -1,5 +1,5 @@
-from datetime import datetime
 from uuid import uuid4
+import datetime
 
 import pytest
 from unittest import TestCase
@@ -12,33 +12,33 @@ from sqlalchemy.dialects.postgresql import UUID, HSTORE, ARRAY, JSON, JSONB
 from sqlalchemy.orm import relationship
 from geoalchemy2 import Geometry
 
-from utils_flask_sqla.serializers import serializable, CustomJSONEncoder
+from utils_flask_sqla.serializers import serializable
 
 
 db = SQLAlchemy()
 
 
-@serializable
+@serializable(stringify=False)
 class Parent(db.Model):
     pk = db.Column(db.Integer, primary_key=True)
 
-@serializable
+@serializable(stringify=False)
 class Child(db.Model):
     pk = db.Column(db.Integer, primary_key=True)
     parent_pk = db.Column(db.Integer, db.ForeignKey(Parent.pk))
     parent = relationship('Parent', backref='childs')
 
-@serializable
+@serializable(stringify=False)
 class A(db.Model):
     pk = db.Column(db.Integer, primary_key=True)
 
-@serializable
+@serializable(stringify=False)
 class B(db.Model):
     pk = db.Column(db.Integer, primary_key=True)
     a_pk = db.Column(db.Integer, db.ForeignKey(A.pk))
     a = relationship('A', backref='b_set')
 
-@serializable
+@serializable(stringify=False)
 class C(db.Model):
     pk = db.Column(db.Integer, primary_key=True)
     b_pk = db.Column(db.Integer, db.ForeignKey(B.pk))
@@ -52,6 +52,8 @@ class TestSerializers:
             pk = db.Column(db.Integer, primary_key=True)
             string = db.Column(db.String)
             unicode = db.Column(db.Unicode)
+            date = db.Column(db.Date)
+            time = db.Column(db.Time)
             datetime = db.Column(db.DateTime)
             boolean = db.Column(db.Boolean)
             uuid = db.Column(UUID(as_uuid=True))
@@ -61,14 +63,16 @@ class TestSerializers:
             jsonb = db.Column(JSONB)
             geom = db.Column(Geometry("GEOMETRY", 4326))
 
-        now = datetime.now()
+        now = datetime.datetime.now()
         uuid = uuid4()
         json_data = {'a': ['b', 'c']}
         geom = wkt.loads('POINT(6 10)')
         kwargs = dict(pk=1,
                       string='string',
                       unicode='unicode',
-                      datetime=datetime.now(),
+                      date=now.date(),
+                      time=now.time(),
+                      datetime=now,
                       boolean=True,
                       uuid=uuid,
                       hstore={'a': ['b', 'c']},
@@ -77,11 +81,11 @@ class TestSerializers:
                       array=[1, 2],
                       geom=geom)
         o = TestModel(**kwargs)
-        d = o.as_dict()
+        d = o.as_dict(stringify=False)
         TestCase().assertDictEqual(kwargs, d)
 
         d = o.as_dict(exclude=['geom'])
-        json.dumps(d, cls=CustomJSONEncoder)  # check dict is JSON-serializable
+        json.dumps(d)  # check dict is JSON-serializable
 
     def test_many_to_one(self):
         parent = Parent(pk=1)
@@ -277,7 +281,7 @@ class TestSerializers:
         }, d)
 
     def test_unexisting_field(self):
-        @serializable
+        @serializable(stringify=False)
         class Model(db.Model):
             pk = db.Column(db.Integer, primary_key=True)
 
@@ -319,11 +323,11 @@ class TestSerializers:
         }, d)
 
     def test_serializable_parameters(self):
-        @serializable(fields=['v_set'])
+        @serializable(fields=['v_set'], stringify=False)
         class U(db.Model):
             pk = db.Column(db.Integer, primary_key=True)
 
-        @serializable(exclude=['u_pk'])
+        @serializable(exclude=['u_pk'], stringify=False)
         class V(db.Model):
             pk = db.Column(db.Integer, primary_key=True)
             u_pk = db.Column(db.Integer, db.ForeignKey(U.pk))
@@ -389,7 +393,7 @@ class TestSerializers:
         }, d)
 
     def test_as_dict_override(self):
-        @serializable
+        @serializable(stringify=False)
         class O(db.Model):
             pk = db.Column(db.Integer, primary_key=True)
 
@@ -397,38 +401,38 @@ class TestSerializers:
                 data['o'] = True
                 return data
 
-        @serializable
+        @serializable(stringify=False)
         class P(O):
             pass
 
-        @serializable
+        @serializable(stringify=False)
         class Q(O):
             def as_dict(self, data):
                 data = super().as_dict()
                 data['q'] = True
                 return data
 
-        @serializable
+        @serializable(stringify=False)
         class R(P):
             def as_dict(self, data):
                 data['r'] = True
                 return data
 
-        @serializable
+        @serializable(stringify=False)
         class S(P):
             def as_dict(self):
                 data = super().as_dict()
                 data['s'] = True
                 return data
 
-        @serializable
+        @serializable(stringify=False)
         class T(O):
             def as_dict(self, *args, **kwargs):
                 data = super().as_dict(*args, **kwargs)
                 data['t'] = True
                 return data
 
-        @serializable(exclude=['pk'])
+        @serializable(exclude=['pk'], stringify=False)
         @serializable
         class W(O):
             pass
@@ -481,7 +485,7 @@ class TestSerializers:
         TestCase().assertDictEqual({}, d)
 
     def test_renamed_field(self):
-        @serializable
+        @serializable(stringify=False)
         class TestModel2(db.Model):
             pk = db.Column(db.Integer, primary_key=True)
             field = db.Column('column', db.String)
@@ -511,7 +515,7 @@ class TestSerializers:
         }, d)
 
     def test_polymorphic_model(self):
-        @serializable
+        @serializable(stringify=False)
         class PolyModel(db.Model):
             __mapper_args__ = {
                 'polymorphic_identity': 'IdentityBase',
@@ -521,7 +525,7 @@ class TestSerializers:
             kind = db.Column(db.String)
             base = db.Column(db.String)
 
-        @serializable
+        @serializable(stringify=False)
         class PolyModelA(PolyModel):
             __mapper_args__ = {
                 'polymorphic_identity': 'A',
@@ -529,7 +533,7 @@ class TestSerializers:
             pk = db.Column(db.Integer, db.ForeignKey(PolyModel.pk), primary_key=True)
             a = db.Column(db.String)
 
-        @serializable
+        @serializable(stringify=False)
         class PolyModelB(PolyModel):
             __mapper_args__ = {
                 'polymorphic_identity': 'B',
@@ -564,7 +568,7 @@ class TestSerializers:
         TestCase().assertDictEqual(d, PolyModelB().from_dict(d).as_dict())
 
     def test_hybrid_property(self):
-        @serializable
+        @serializable(stringify=False)
         class HybridModel(db.Model):
             pk = db.Column(db.Integer, primary_key=True)
             part1 = db.Column(db.String)
