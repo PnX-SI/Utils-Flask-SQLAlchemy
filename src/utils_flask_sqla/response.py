@@ -55,6 +55,7 @@ def to_json_resp(
             "attachment",
             filename="export_{}.{}".format(filename, extension),
         )
+    # use Flask JSONEncoder for raw sql query
     return Response(
         json.dumps(
             res, ensure_ascii=False, indent=indent, cls=JSONEncoder
