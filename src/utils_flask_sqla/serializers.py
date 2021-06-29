@@ -1,10 +1,6 @@
 """
   Serialize function for SQLAlchemy models
 """
-import uuid
-import datetime
-import json
-
 from inspect import signature
 from warnings import warn
 from collections import defaultdict, ChainMap
@@ -12,7 +8,6 @@ from itertools import chain
 from functools import lru_cache
 from uuid import UUID
 
-from flask.json import JSONEncoder
 from sqlalchemy.orm import ColumnProperty
 from sqlalchemy import inspect
 from sqlalchemy.ext.hybrid import hybrid_property, HYBRID_PROPERTY

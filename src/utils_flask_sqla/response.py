@@ -1,13 +1,11 @@
 import csv
-import datetime
 import io
 import json
-import uuid
 from functools import wraps
 
 from flask import Response
+from flask.json import JSONEncoder
 from werkzeug.datastructures import Headers
-
 
 def json_resp_accept(accepted_list=[]):
     def json_resp(fn):
@@ -59,7 +57,7 @@ def to_json_resp(
         )
     return Response(
         json.dumps(
-            res, ensure_ascii=False, indent=indent, cls=CustomJSONEncoder
+            res, ensure_ascii=False, indent=indent, cls=JSONEncoder
         ),
         status=status,
         mimetype="application/json",
