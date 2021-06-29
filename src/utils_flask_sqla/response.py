@@ -8,8 +8,6 @@ from functools import wraps
 from flask import Response
 from werkzeug.datastructures import Headers
 
-from .serializers import CustomJSONEncoder, SERIALIZERS
-
 
 def json_resp_accept(accepted_list=[]):
     def json_resp(fn):
