@@ -1,15 +1,11 @@
 import csv
-import datetime
 import io
 import json
-import uuid
 from functools import wraps
 
 from flask import Response
+from flask.json import JSONEncoder
 from werkzeug.datastructures import Headers
-
-from .serializers import CustomJSONEncoder, SERIALIZERS
-
 
 def json_resp_accept(accepted_list=[]):
     def json_resp(fn):
@@ -59,9 +55,10 @@ def to_json_resp(
             "attachment",
             filename="export_{}.{}".format(filename, extension),
         )
+    # use Flask JSONEncoder for raw sql query
     return Response(
         json.dumps(
-            res, ensure_ascii=False, indent=indent, cls=CustomJSONEncoder
+            res, ensure_ascii=False, indent=indent, cls=JSONEncoder
         ),
         status=status,
         mimetype="application/json",

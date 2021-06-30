@@ -1,9 +1,6 @@
 """
   Serialize function for SQLAlchemy models
 """
-import uuid
-import datetime
-
 from inspect import signature
 from warnings import warn
 from collections import defaultdict, ChainMap
@@ -11,11 +8,11 @@ from itertools import chain
 from functools import lru_cache
 from uuid import UUID
 
-from flask.json import JSONEncoder
 from sqlalchemy.orm import ColumnProperty
 from sqlalchemy import inspect
-from sqlalchemy.ext.hybrid import HYBRID_PROPERTY
-
+from sqlalchemy.ext.hybrid import hybrid_property, HYBRID_PROPERTY
+from sqlalchemy.types import DateTime, Date, Time
+from sqlalchemy.dialects.postgresql.base import UUID
 
 """
     List of data type who need a particular serialization
@@ -30,9 +27,32 @@ SERIALIZERS = {
     "numeric": lambda x: str(x) if x else None,
 }
 
-def get_serializable_decorator(fields=[], exclude=[]):
+
+def get_serializer(col):
+    if isinstance(col, ColumnProperty):
+        col_type = col.columns[0].type
+        if isinstance(col_type, UUID):
+            return str
+        elif isinstance(col_type, Date):
+            return str
+        elif isinstance(col_type, Time):
+            return str
+        elif isinstance(col_type, DateTime):
+            return str
+        else:
+            return None
+    elif isinstance(col, hybrid_property):
+        # TODO Does some hybrid property need conversion?
+        return None
+    else:
+        # TODO May be support CompositeProperty, …
+        return None
+
+
+def get_serializable_decorator(fields=[], exclude=[], stringify=True):
     default_fields = fields
     default_exclude = exclude
+    default_stringify = stringify
 
     def _serializable(cls):
         """
@@ -137,10 +157,13 @@ def get_serializable_decorator(fields=[], exclude=[]):
                                    for key, rel in _relationships.items()
                                    if key not in exclude }
 
+            _columns = { key: (col, get_serializer(col))
+                         for key, col in _columns.items() }
+
             return _columns, _relationships
 
         def serializefn(self, recursif=False, columns=[], relationships=[],
-                        fields=None, exclude=None, depth=None, _excluded_mappers=[]):
+                        fields=None, exclude=None, stringify=None, depth=None, _excluded_mappers=[]):
             """
             Méthode qui renvoie les données de l'objet sous la forme d'un dict
 
@@ -184,6 +207,8 @@ def get_serializable_decorator(fields=[], exclude=[]):
                 fields = default_fields
             if exclude is None:
                 exclude = default_exclude
+            if stringify is None:
+                stringify = default_stringify
 
             if columns:
                 warn("'columns' argument is deprecated. Please add columns to serialize "
@@ -219,8 +244,11 @@ def get_serializable_decorator(fields=[], exclude=[]):
             }
 
             data = {}
-            for key, col in _columns.items():
+            for key, props in _columns.items():
+                col, serializer = props
                 data[key] = getattr(self, key)
+                if stringify and serializer is not None and data[key] is not None:
+                    data[key] = serializer(data[key])
             for key, rel in _relationships.items():
                 kwargs = serialize_kwargs.copy()
                 _fields = [ field.split('.', 1)[1]
@@ -386,13 +414,3 @@ def serializable(*args, **kwargs):
         return get_serializable_decorator()(args[0])
     else:
         return get_serializable_decorator(*args, **kwargs)  # e.g. @serializable(exclude=['field'])
-
-
-class CustomJSONEncoder(JSONEncoder):
-    def default(self, o):
-        try:
-            if isinstance(o, datetime.time):
-                return str(o) if o is not None else None
-        except TypeError:
-            pass
-        return JSONEncoder.default(self, o)
