@@ -33,7 +33,7 @@ CHANGELOG
 
 **🐛 Corrections**
 
-* Gestion du cas suivants :
+* Gestion du cas suivant :
 
 ::
 
