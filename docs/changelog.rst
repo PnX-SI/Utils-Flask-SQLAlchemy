@@ -2,17 +2,30 @@
 CHANGELOG
 =========
 
+0.2.4 (unreleased)
+------------------
+
+**🐛 Corrections**
+
+* 
+
 0.2.3 (2021-06-30)
 ------------------
 
 **🚀 Nouveautés**
 
-* Ajout du paramètre `stringify` (default `True`) qui contrôle la transformation des types non JSON sérialisable en `str`
+* Ajout du paramètre ``stringify`` (default ``True``) qui contrôle la transformation des types non JSON sérialisable en ``str``
+
+**🐛 Corrections**
+
+* Correction des régressions de performance sur la sérialisation 
+
+0.2.2 (2021-06-22)
+------------------
 
 **🐛 Corrections**
 
 * Support des propriétés hybrides des modèles 
-* Correction des regressions de performance sur la serialisation 
 * Ajout de tests sur les modèles polymorphiques
 
 0.2.1 (2021-06-03)
@@ -20,7 +33,7 @@ CHANGELOG
 
 **🐛 Corrections**
 
-* Gestion du cas suivant :
+* Gestion du cas suivants :
 
 ::
 
