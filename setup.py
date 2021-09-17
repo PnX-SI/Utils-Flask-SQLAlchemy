@@ -26,6 +26,11 @@ setuptools.setup(
     extras_require={
         'tests': ['geoalchemy2', 'jsonschema'],
     },
+    entry_points={
+        'alembic': [
+            'migrations = utils_flask_sqla.migrations:versions',
+        ],
+    },
     classifiers=['Development Status :: 1 - Planning',
                  'Intended Audience :: Developers',
                  'Natural Language :: English',
