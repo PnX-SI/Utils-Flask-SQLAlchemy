@@ -18,11 +18,11 @@ Le fichier téléchargé est enregistré dans le dossier spécifié par -x data-
 Si aucun dossier n’est spécifié, un dossier temporaire, supprimé à la fin de la migration, est utilisé.
 """
 class open_remote_file(ExitStack):
-    def __init__(self, base_url, filename):
+    def __init__(self, base_url, filename, open_fct=lzma.open):
         super().__init__()
         self.base_url = base_url
         self.filename = filename
-        self.file_extension = filename.split('.')[-1]
+        self.open_fct = open_fct
         self.data_dir = context.get_x_argument(as_dictionary=True).get('data-directory')
 
     def __enter__(self):
@@ -38,10 +38,4 @@ class open_remote_file(ExitStack):
             with urlopen('{}{}'.format(self.base_url, self.filename)) as response, \
                                               open(remote_file_path, 'wb') as remote_file:
                 copyfileobj(response, remote_file)
-        # test des extension
-        f = None
-        if self.filename.endswith('.xz'):
-            f = lzma.open(remote_file_path)
-        else:
-            f = open(remote_file_path)
-        return stack.enter_context(f)
+        return stack.enter_context(self.open_fct(remote_file_path))
