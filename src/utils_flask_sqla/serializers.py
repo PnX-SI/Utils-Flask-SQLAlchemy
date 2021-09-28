@@ -142,13 +142,13 @@ def get_serializable_decorator(fields=[], exclude=[], stringify=True):
                 raise Exception(f"Relationship '{field}' does not exist on {cls}.")
 
             _columns = { key: col
-                         for key, col in ChainMap(mapper.column_attrs, hybrid_properties).items()
+                         for key, col in ChainMap(dict(mapper.column_attrs), hybrid_properties).items()
                          if key in fields }
             _relationships = { key: rel
                                for key, rel in mapper.relationships.items()
                                if key in firstlevel_fields }
             if not _columns:
-                _columns = ChainMap(mapper.column_attrs, hybrid_properties)
+                _columns = ChainMap(dict(mapper.column_attrs), hybrid_properties)
             if exclude:
                 _columns = { key: col
                              for key, col in _columns.items()
