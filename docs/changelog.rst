@@ -5,9 +5,15 @@ CHANGELOG
 0.2.4 (unreleased)
 ------------------
 
+**🚀 Nouveautés**
+
+* Ajout d’une fonction utilitaire ``open_remote_file`` utile pour les migrations Alembic
+* Ajout d’une branche Alembic ``sql_utils`` offrant la fonction SQL ``public.fct_trg_meta_dates_change``
+* Compatibilité avec Python 3.9
+
 **🐛 Corrections**
 
-* 
+* Ajout d’une dépendance manquante
 
 0.2.3 (2021-06-30)
 ------------------
