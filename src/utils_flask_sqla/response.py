@@ -42,9 +42,8 @@ def to_json_resp(
     extension="json",
     accepted_list=[],
 ):
-    if not (res or res in accepted_list) and status != 204:
-        status = 404
-        res = {"message": "not found"}
+    if res is None:
+        return ('', 204)
 
     headers = None
     if as_file:
