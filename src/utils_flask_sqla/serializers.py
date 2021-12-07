@@ -53,6 +53,8 @@ def get_serializable_decorator(fields=[], exclude=[], stringify=True):
     default_fields = fields
     default_exclude = exclude
     default_stringify = stringify
+    firstlevel_default_fields = { field.split('.')[0]
+                                  for field in default_fields }
 
     def _serializable(cls):
         """
@@ -125,7 +127,36 @@ def get_serializable_decorator(fields=[], exclude=[], stringify=True):
             ]
 
         @lru_cache(maxsize=None)
-        def get_columns_and_relationships(fields, exclude):
+        def get_columns_and_relationships(fields=None, exclude=None):
+            _default_exclude = set(default_exclude)
+            if fields is None:
+                fields = default_fields
+            elif fields:
+                base_fields = set()
+                additional_fields = set()
+                relationship_fields = set()
+                for field in fields:
+                    if field.split('.')[0] in mapper.relationships:
+                        relationship_fields.add(field)
+                    elif field.startswith('+'):
+                        field = field.lstrip('+')
+                        additional_fields.add(field)
+                    else:
+                        base_fields.add(field)
+                    # We remove given fields from default_exclude!
+                    _default_exclude -= {field}
+                if base_fields:
+                    fields = base_fields | additional_fields | relationship_fields
+                else:  # given fields are only relationships or additional fields, but no columns
+                    # if we have some columns in default fields, we add additional fields to these columns
+                    if firstlevel_default_fields - set(mapper.relationships.keys()):
+                        fields = set(default_fields) | additional_fields | relationship_fields
+                    # else, we do not add additional fields as we want ALL columns (default behaviour), not only additional columns
+                    else:
+                        fields = set(default_fields) | relationship_fields
+            if exclude is None:
+                exclude = _default_exclude
+
             # take 'a' instead of 'a.b'
             firstlevel_fields = [ rel.split('.')[0] for rel in fields ]
 
@@ -160,7 +191,7 @@ def get_serializable_decorator(fields=[], exclude=[], stringify=True):
             _columns = { key: (col, get_serializer(col))
                          for key, col in _columns.items() }
 
-            return _columns, _relationships
+            return fields, exclude, _columns, _relationships
 
         def serializefn(self, recursif=False, columns=[], relationships=[],
                         fields=None, exclude=None, stringify=None, depth=None, _excluded_mappers=[]):
@@ -203,20 +234,20 @@ def get_serializable_decorator(fields=[], exclude=[], stringify=True):
                 relationships: liste
                     liste des relationships qui doivent être prise en compte
             """
-            if fields is None:
-                fields = default_fields
-            if exclude is None:
-                exclude = default_exclude
             if stringify is None:
                 stringify = default_stringify
 
             if columns:
                 warn("'columns' argument is deprecated. Please add columns to serialize "
                      "directly in 'fields' argument.", DeprecationWarning)
+                if fields is None:
+                    fields = []
                 fields = chain(fields, columns)
             if relationships:
                 warn("'relationships' argument is deprecated. Please add relationships to serialize "
                      "directly in 'fields' argument.", DeprecationWarning)
+                if fields is None:
+                    fields = []
                 fields = chain(fields, relationships)
 
             if depth:
@@ -226,16 +257,20 @@ def get_serializable_decorator(fields=[], exclude=[], stringify=True):
                      "directly in 'fields' argument.", DeprecationWarning)
                 _excluded_mappers = _excluded_mappers + [ mapper ]
                 if depth is None or depth > 0:
+                    if fields is None:
+                        fields = []
                     fields = chain(fields, [ rel.key for rel in mapper.relationships
                                              if rel.key not in fields
                                              and rel.mapper not in _excluded_mappers ])
                     if depth:
                         depth -= 1
 
-            fields = frozenset(fields)
-            exclude = frozenset(exclude)
+            if fields is not None:
+                fields = frozenset(fields)
+            if exclude is not None:
+                exclude = frozenset(exclude)
 
-            _columns, _relationships = get_columns_and_relationships(fields, exclude)
+            fields, exclude, _columns, _relationships = get_columns_and_relationships(fields, exclude)
 
             serialize_kwargs = {
                 'recursif': recursif,
@@ -265,7 +300,7 @@ def get_serializable_decorator(fields=[], exclude=[], stringify=True):
                     rel_object = getattr(self, rel.key)
                     if rel_object:
                         data[rel.key] = rel_object.as_dict(**kwargs)
-                    else:
+                    else:  # relationship may be null
                         data[rel.key] = None
             return data
         serializefn.__original_decorator = True

@@ -590,3 +590,82 @@ class TestSerializers:
             'part2': 'b',
             'concat': 'a b',
         }, d)
+
+    def test_additional_fields(self):
+        @serializable(fields=['v_set'], exclude=['field2'])
+        class U2(db.Model):
+            pk = db.Column(db.Integer, primary_key=True)
+            field1 = db.Column(db.String)
+            field2 = db.Column(db.String)
+
+        @serializable(fields=['pk'])
+        class V2(db.Model):
+            pk = db.Column(db.Integer, primary_key=True)
+            u_pk = db.Column(db.Integer, db.ForeignKey(U2.pk))
+            u = relationship('U2', backref='v_set')
+
+        u = U2(pk=1, field1='test', field2='test')
+        v = V2(pk=1, u_pk=u.pk, u=u)
+
+        d = u.as_dict()
+        TestCase().assertDictEqual({
+            'pk': 1,
+            'field1': 'test',
+            'v_set': [{'pk': 1}],
+        }, d)
+
+        d = u.as_dict(exclude=[])
+        TestCase().assertDictEqual({
+            'pk': 1,
+            'field1': 'test',
+            'field2': 'test',
+            'v_set': [{'pk': 1}],
+        }, d)
+
+        d = u.as_dict(fields=['field1'])
+        TestCase().assertDictEqual({
+            'field1': 'test',
+        }, d)
+
+        # Verify that field2 is removed from default_exclude
+        d = u.as_dict(fields=['field1', 'field2'])
+        TestCase().assertDictEqual({
+            'field1': 'test',
+            'field2': 'test',
+        }, d)
+
+        # Verify that field2 is removed from default_exclude
+        d = u.as_dict(fields=['field1', '+field2'])
+        TestCase().assertDictEqual({
+            'field1': 'test',
+            'field2': 'test',
+        }, d)
+
+        # Verify that field2 is removed from default_exclude
+        d = u.as_dict(fields=['field2'])
+        TestCase().assertDictEqual({
+            'field2': 'test',
+        }, d)
+
+        # Verify that field2 is removed from default_exclude, will keeping default_fields
+        d = u.as_dict(fields=['+field2', 'v_set'])
+        TestCase().assertDictEqual({
+            'pk': 1,
+            'field1': 'test',
+            'field2': 'test',
+            'v_set': [{'pk': 1}],
+        }, d)
+
+        d = u.as_dict(fields=['v_set.u_pk'])
+        TestCase().assertDictEqual({
+            'pk': 1,
+            'field1': 'test',
+            'v_set': [{'u_pk': 1}],
+        }, d)
+
+        d = u.as_dict(fields=['v_set.+u_pk'])
+        TestCase().assertDictEqual({
+            'pk': 1,
+            'field1': 'test',
+            'v_set': [{'pk': 1, 'u_pk': 1}],
+        }, d)
