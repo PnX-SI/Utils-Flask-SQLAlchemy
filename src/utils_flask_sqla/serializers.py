@@ -194,7 +194,8 @@ def get_serializable_decorator(fields=[], exclude=[], stringify=True):
             return fields, exclude, _columns, _relationships
 
         def serializefn(self, recursif=False, columns=[], relationships=[],
-                        fields=None, exclude=None, stringify=None, depth=None, _excluded_mappers=[]):
+                        fields=None, exclude=None, stringify=None, unloaded=None,
+                        depth=None, _excluded_mappers=[]):
             """
             Méthode qui renvoie les données de l'objet sous la forme d'un dict
 
@@ -275,6 +276,7 @@ def get_serializable_decorator(fields=[], exclude=[], stringify=True):
             serialize_kwargs = {
                 'recursif': recursif,
                 'depth': depth,
+                'unloaded': unloaded,
                 '_excluded_mappers': _excluded_mappers,
             }
 
@@ -285,6 +287,14 @@ def get_serializable_decorator(fields=[], exclude=[], stringify=True):
                 if stringify and serializer is not None and data[key] is not None:
                     data[key] = serializer(data[key])
             for key, rel in _relationships.items():
+                if unloaded is not None:
+                    m = inspect(self)
+                    if key in m.unloaded:
+                        err = f"Relationship '{key}' on '{self}' is not loaded"
+                        if unloaded == 'raise':
+                            raise Exception(err)
+                        elif unloaded == 'warn':
+                            warn(err)
                 kwargs = serialize_kwargs.copy()
                 _fields = [ field.split('.', 1)[1]
                             for field in fields
