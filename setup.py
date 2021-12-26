@@ -24,7 +24,12 @@ setuptools.setup(
     package_dir={'': 'src'},
     install_requires=requirements,
     extras_require={
-        'tests': ['geoalchemy2', 'jsonschema'],
+        'tests': [
+            'geoalchemy2',
+            'jsonschema',
+            'flask-marshmallow',
+            'marshmallow-sqlalchemy',
+        ],
     },
     entry_points={
         'alembic': [
