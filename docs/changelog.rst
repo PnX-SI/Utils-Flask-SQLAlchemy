@@ -8,9 +8,8 @@ CHANGELOG
 **🚀 Nouveautés**
 
 * ``as_dict()`` : ajout de l’option ``unloaded``, acceptant les valeurs ``raise`` et ``warn``
-* ``@json_resp`` : les réponses vides ne déclenche plus l’émission d’une 404
+* ``@json_resp`` : les réponses vides ne déclenchent plus l’émission d’une 404
 * Ajout de ``SmartRelationshipsMixin`` permettant d’exclure par défaut les schémas ``Nested`` lors de la sérialisation avec Marshmallow
-
 
 0.2.4 (2021-09-30)
 ------------------
