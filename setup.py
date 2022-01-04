@@ -35,6 +35,9 @@ setuptools.setup(
         'alembic': [
             'migrations = utils_flask_sqla.migrations:versions',
         ],
+        'pytest11': [
+            'sqla = utils_flask_sqla.tests.plugin',
+        ],
     },
     classifiers=['Development Status :: 1 - Planning',
                  'Intended Audience :: Developers',
