@@ -2,6 +2,28 @@
 CHANGELOG
 =========
 
+0.2.6 (2022-01-04)
+------------------
+
+**🚀 Nouveautés**
+
+* Ajout de la fixture pytest ``temporary_transaction``. Utilisation :
+
+  ::
+
+    @pytest.mark.usefixtures("temporary_transaction")
+    class TestClass:
+        …
+
+* Ajout de l’utilitaire ``JSONClient``. Utilisation :
+
+  ::
+
+    from utils_flask_sqla.tests.utils import JSONClient
+    app.test_client_class = JSONClient
+
+* Intégration continue du module
+
 0.2.5 (2022-01-03)
 ------------------
 
