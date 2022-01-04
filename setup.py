@@ -25,7 +25,9 @@ setuptools.setup(
     install_requires=requirements,
     extras_require={
         'tests': [
+            'pytest',
             'geoalchemy2',
+            'shapely',
             'jsonschema',
             'flask-marshmallow',
             'marshmallow-sqlalchemy',
