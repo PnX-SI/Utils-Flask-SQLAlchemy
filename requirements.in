@@ -1,5 +1,4 @@
 flask
 flask-sqlalchemy
 marshmallow
-marshmallow-sqlalchemy
 python-dateutil
