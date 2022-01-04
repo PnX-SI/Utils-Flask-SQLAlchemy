@@ -22,7 +22,7 @@ CHANGELOG
     from utils_flask_sqla.tests.utils import JSONClient
     app.test_client_class = JSONClient
 
-* Intégration continue du module
+* Intégration continue du module pour exécuter automatiquement les tests et la couverture de code avec GitHub Actions, à chaque commit ou pull request dans les branches ``develop`` ou ``master``
 
 0.2.5 (2022-01-03)
 ------------------
