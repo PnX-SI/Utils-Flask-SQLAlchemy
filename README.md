@@ -1,5 +1,8 @@
 ## Librairie "outil" pour SQLAlchemy et Flask
 
+[![pytest](https://github.com/PnX-SI/Utils-Flask-SQLAlchemy/actions/workflows/pytest.yml/badge.svg)](https://github.com/PnX-SI/Utils-Flask-SQLAlchemy/actions/workflows/pytest.yml)
+[![codecov](https://codecov.io/gh/PnX-SI/Utils-Flask-SQLAlchemy/branch/master/graph/badge.svg?token=R81RR3V5RI)](https://codecov.io/gh/PnX-SI/Utils-Flask-SQLAlchemy)
+
 Cette librairie fournit des décorateurs pour faciliter le développement avec Flask et SQLAlchemy. 
 
 Paquet Python : https://pypi.org/project/utils-flask-sqlalchemy/.
