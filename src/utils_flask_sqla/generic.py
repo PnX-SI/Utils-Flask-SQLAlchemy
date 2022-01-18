@@ -232,20 +232,16 @@ class GenericQuery:
     def build_query_order(self, query, parameters):
         # Ordonnancement
         if "orderby" in parameters:
-            if parameters.get("orderby") in self.view.columns:
-                ordel_col = getattr(
-                    self.view.tableDef.columns, parameters["orderby"])
+            if parameters.get("orderby") in self.view.tableDef.columns.keys():
+                ordel_col = getattr(self.view.tableDef.columns, parameters["orderby"])
         else:
             return query
 
         if "order" in parameters:
             if parameters["order"] == "desc":
                 ordel_col = ordel_col.desc()
-                return query.order_by(ordel_col)
-        else:
-            return query
 
-        return query
+        return query.order_by(ordel_col)
 
     def query(self):
         """
