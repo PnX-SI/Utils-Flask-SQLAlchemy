@@ -231,17 +231,17 @@ class GenericQuery:
 
     def build_query_order(self, query, parameters):
         # Ordonnancement
-        if "orderby" in parameters:
-            if parameters.get("orderby") in self.view.tableDef.columns.keys():
-                ordel_col = getattr(self.view.tableDef.columns, parameters["orderby"])
-        else:
-            return query
-
-        if "order" in parameters:
-            if parameters["order"] == "desc":
-                ordel_col = ordel_col.desc()
-
-        return query.order_by(ordel_col)
+        # L'ordonnancement se base actuellement sur une seule colonne
+        #   et prend la forme suivante : nom_colonne[:ASC|DESC]
+        if parameters.get("orderby", None).replace(" ", ""):
+            order_by = parameters.get("orderby")
+            col, *sort = order_by.split(':')
+            if col in self.view.tableDef.columns.keys():
+                ordel_col = getattr(self.view.tableDef.columns, col)
+                if (sort[0:1] or ["ASC"])[0].lower() == "desc":
+                    ordel_col = ordel_col.desc()
+            return query.order_by(ordel_col)
+        return query
 
     def query(self):
         """
