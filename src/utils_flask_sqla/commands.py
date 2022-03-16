@@ -58,6 +58,7 @@ def box_drowing(up, down, left, right):
               help='Additional arguments consumed by custom env.py scripts')
 @with_appcontext
 def autoupgrade(directory, sql, tag, x_arg):
+    """Upgrade all branches to head."""
     db = current_app.extensions['sqlalchemy'].db
     migrate = current_app.extensions['migrate'].migrate
     config = migrate.get_config(directory, x_arg)
