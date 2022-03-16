@@ -15,7 +15,7 @@ class JSONClient(testing.FlaskClient):
                     }
                 )
             )
-        if "Content-Type" not in headers and "data" in kwargs:
+        if "content_type" not in kwargs and "Content-Type" not in headers and "data" in kwargs:
             kwargs["data"] = json.dumps(kwargs["data"])
             headers.extend(
                 Headers(
