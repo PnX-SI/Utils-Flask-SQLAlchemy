@@ -1,7 +1,7 @@
 """
   Serialize function for SQLAlchemy models
 """
-from inspect import signature
+from inspect import signature, getattr_static
 from warnings import warn
 from collections import defaultdict, ChainMap
 from itertools import chain
@@ -160,11 +160,15 @@ def get_serializable_decorator(fields=[], exclude=[], stringify=True):
             # take 'a' instead of 'a.b'
             firstlevel_fields = [ rel.split('.')[0] for rel in fields ]
 
+            properties = { key: None
+                           for key in dir(cls)
+                           if isinstance(getattr_static(cls, key), property) }
             hybrid_properties = { key: attr
                                   for key, attr in mapper.all_orm_descriptors.items()
                                   if attr.extension_type == HYBRID_PROPERTY }
             for field in set([ f for f in fields if '.' not in f ]) \
                     - set(mapper.column_attrs.keys()) \
+                    - set(properties.keys()) \
                     - set(hybrid_properties.keys()) \
                     - set(mapper.relationships.keys()):
                 raise Exception(f"Field '{field}' does not exist on {cls}.")
@@ -173,13 +177,13 @@ def get_serializable_decorator(fields=[], exclude=[], stringify=True):
                 raise Exception(f"Relationship '{field}' does not exist on {cls}.")
 
             _columns = { key: col
-                         for key, col in ChainMap(dict(mapper.column_attrs), hybrid_properties).items()
+                         for key, col in ChainMap(dict(mapper.column_attrs), properties, hybrid_properties).items()
                          if key in fields }
             _relationships = { key: rel
                                for key, rel in mapper.relationships.items()
                                if key in firstlevel_fields }
             if not _columns:
-                _columns = ChainMap(dict(mapper.column_attrs), hybrid_properties)
+                _columns = ChainMap(dict(mapper.column_attrs), properties, hybrid_properties)
             if exclude:
                 _columns = { key: col
                              for key, col in _columns.items()

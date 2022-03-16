@@ -567,6 +567,26 @@ class TestSerializers:
         }
         TestCase().assertDictEqual(d, PolyModelB().from_dict(d).as_dict())
 
+    def test_property(self):
+        @serializable
+        class PropertyModel(db.Model):
+            pk = db.Column(db.Integer, primary_key=True)
+            a = db.Column(db.Integer)
+            b = db.Column(db.Integer)
+
+            @property
+            def sum(self):
+                return self.a + self.b
+
+        h = PropertyModel(pk=1, a=2, b=3)
+        d = h.as_dict()
+        TestCase().assertDictEqual({
+            'pk': 1,
+            'a': 2,
+            'b': 3,
+            'sum': 5,
+        }, d)
+
     def test_hybrid_property(self):
         @serializable(stringify=False)
         class HybridModel(db.Model):
