@@ -40,6 +40,9 @@ setuptools.setup(
         'pytest11': [
             'sqla = utils_flask_sqla.tests.plugin',
         ],
+        'flask.commands': [
+            'db = utils_flask_sqla.commands:db_cli',
+        ],
     },
     classifiers=['Development Status :: 1 - Planning',
                  'Intended Audience :: Developers',
