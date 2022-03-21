@@ -1,4 +1,4 @@
-from collections import deque
+from collections import deque, defaultdict
 from itertools import chain
 from io import StringIO
 
@@ -101,7 +101,7 @@ def status(directory, x_arg, branches):
         branch, = branch_base.branch_labels
         if branches and branch not in branches:
             continue
-        levels = { branch_base: 0 }
+        levels = defaultdict(set)
         branch_outdated = False
         seen = set()
         todo = deque()
@@ -109,32 +109,31 @@ def status(directory, x_arg, branches):
         while todo:
             rev = todo.pop()
 
-            current_level = levels[rev]
-            down_revisions = rev.down_revision if rev.is_merge_point else [rev.down_revision] if rev.down_revision else []
+            down_levels = levels[rev]
+            if rev.is_merge_point:
+                down_revisions = rev.down_revision
+            elif rev.down_revision:
+                down_revisions = [rev.down_revision]
+            else:
+                down_revisions = []
             down_revisions = [ script.get_revision(r) for r in down_revisions ]
 
             next_revisions = [ script.get_revision(r) for r in rev.nextrev ]
 
-            if rev.is_merge_point and not seen.issuperset(down_revisions):
+            if (rev.is_merge_point
+                and (not seen.issuperset(down_revisions)
+                     or rev in todo)):
                 continue
             seen.add(rev)
 
-            down_levels = []
-            for j, downrev in enumerate(sorted(down_revisions, key=lambda rev: levels[rev])):
-                if downrev.is_branch_point:
-                    down_levels.append(current_level)
-                else:
-                    down_levels.append(levels[downrev])
-
-            next_levels = []
+            next_levels = set()
             for j, nextrev in enumerate(next_revisions):
                 if j == 0:
-                    next_level = current_level
+                    next_level = min(down_levels) if down_levels else 0
                 else:
-                    # TODO: reuse unused levels
-                    next_level = max(levels.values()) + 1
-                levels[nextrev] = next_level
-                next_levels.append(next_level)
+                    next_level = max(chain(*[levels[rev] for rev in todo])) + 1
+                levels[nextrev].add(next_level)
+                next_levels.add(next_level)
                 todo.append(nextrev)
 
             all_levels = list(chain(down_levels, next_levels))
