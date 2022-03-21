@@ -78,8 +78,9 @@ def autoupgrade(directory, sql, tag, x_arg):
               help=('Migration script directory (default is "migrations")'))
 @click.option('-x', '--x-arg', multiple=True,
               help='Additional arguments consumed by custom env.py scripts')
+@click.argument('branches', nargs=-1)
 @with_appcontext
-def status(directory, x_arg):
+def status(directory, x_arg, branches):
     """Show all revisions sorted by branches."""
     db = current_app.extensions['sqlalchemy'].db
     migrate = current_app.extensions['migrate'].migrate
@@ -98,6 +99,8 @@ def status(directory, x_arg):
     for branch_base in sorted(bases, key=lambda rev: next(iter(rev.branch_labels))):
         output = StringIO()
         branch, = branch_base.branch_labels
+        if branches and branch not in branches:
+            continue
         levels = { branch_base: 0 }
         branch_outdated = False
         seen = set()
