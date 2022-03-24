@@ -22,21 +22,25 @@ db = SQLAlchemy()
 class Parent(db.Model):
     pk = db.Column(db.Integer, primary_key=True)
 
+
 @serializable(stringify=False)
 class Child(db.Model):
     pk = db.Column(db.Integer, primary_key=True)
     parent_pk = db.Column(db.Integer, db.ForeignKey(Parent.pk))
     parent = relationship('Parent', backref='childs')
 
+
 @serializable(stringify=False)
 class A(db.Model):
     pk = db.Column(db.Integer, primary_key=True)
+
 
 @serializable(stringify=False)
 class B(db.Model):
     pk = db.Column(db.Integer, primary_key=True)
     a_pk = db.Column(db.Integer, db.ForeignKey(A.pk))
     a = relationship('A', backref='b_set')
+
 
 @serializable(stringify=False)
 class C(db.Model):
@@ -65,7 +69,6 @@ class TestSerializers:
 
         now = datetime.datetime.now()
         uuid = uuid4()
-        json_data = {'a': ['b', 'c']}
         geom = wkt.loads('POINT(6 10)')
         kwargs = dict(pk=1,
                       string='string',
@@ -86,6 +89,27 @@ class TestSerializers:
 
         d = o.as_dict(exclude=['geom'])
         json.dumps(d)  # check dict is JSON-serializable
+        assert d == {
+            'pk': 1,
+            'string': 'string',
+            'unicode': 'unicode',
+            'date': str(now.date()),
+            'time': str(now.time()),
+            'datetime': str(now),
+            'boolean': True,
+            'uuid': str(uuid),
+            'hstore': {
+                'a': ['b', 'c'],
+            },
+            'json': {
+                'e': [1, 2],
+            },
+            'jsonb': [
+                3,
+                {'f': 'g'},
+            ],
+            'array': [1, 2],
+        }
 
     def test_many_to_one(self):
         parent = Parent(pk=1)
