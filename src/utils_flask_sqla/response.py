@@ -7,6 +7,7 @@ from flask import Response
 from flask.json import JSONEncoder
 from werkzeug.datastructures import Headers
 
+
 def json_resp_accept(accepted_list=[]):
     def json_resp(fn):
         """
@@ -31,8 +32,6 @@ json_resp = json_resp_accept()
 json_resp_accept_empty_list = json_resp_accept([[]])
 
 
-
-
 def to_json_resp(
     res,
     status=200,
@@ -43,7 +42,7 @@ def to_json_resp(
     accepted_list=[],
 ):
     if res is None:
-        return ('', 204)
+        return ("", 204)
 
     headers = None
     if as_file:
@@ -56,9 +55,7 @@ def to_json_resp(
         )
     # use Flask JSONEncoder for raw sql query
     return Response(
-        json.dumps(
-            res, ensure_ascii=False, indent=indent, cls=JSONEncoder
-        ),
+        json.dumps(res, ensure_ascii=False, indent=indent, cls=JSONEncoder),
         status=status,
         mimetype="application/json",
         headers=headers,
@@ -83,9 +80,7 @@ def to_csv_resp(filename, data, columns, separator=";"):
 
     headers = Headers()
     headers.add("Content-Type", "text/plain")
-    headers.add(
-        "Content-Disposition", "attachment", filename="export_%s.csv" % filename
-    )
+    headers.add("Content-Disposition", "attachment", filename="export_%s.csv" % filename)
     out = generate_csv_content(columns, data, separator)
     return Response(out, headers=headers)
 

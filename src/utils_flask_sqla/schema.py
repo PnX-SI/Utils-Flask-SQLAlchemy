@@ -11,16 +11,16 @@ class SmartRelationshipsMixin:
             else:
                 natural_fields.add(name)
 
-        only = kwargs.pop('only', None)
+        only = kwargs.pop("only", None)
         only = set(only) if only is not None else set()
-        firstlevel_only = { field.split('.', 1)[0] for field in only }
-        exclude = kwargs.pop('exclude', None)
+        firstlevel_only = {field.split(".", 1)[0] for field in only}
+        exclude = kwargs.pop("exclude", None)
         exclude = set(exclude) if exclude is not None else set()
-        exclude |= (nested_fields - firstlevel_only)
+        exclude |= nested_fields - firstlevel_only
         if not firstlevel_only - nested_fields:
             only |= natural_fields
         if only:
-            kwargs['only'] = only
+            kwargs["only"] = only
         if exclude:
-            kwargs['exclude'] = exclude
+            kwargs["exclude"] = exclude
         super().__init__(*args, **kwargs)

@@ -11,9 +11,9 @@ from dateutil import parser
 
 def testDataType(value, sqlType, paramName):
     """
-        Test the type of a filter
-        #TODO: antipatern: should raise something which can be exect by the function which use it
-        # and not return the error
+    Test the type of a filter
+    #TODO: antipatern: should raise something which can be exect by the function which use it
+    # and not return the error
     """
     if sqlType == Integer or isinstance(sqlType, (Integer)):
         try:
@@ -35,12 +35,12 @@ def testDataType(value, sqlType, paramName):
 
 def test_type_and_generate_query(param_name, value, model, q):
     """
-        Generate a query with the filter given, checking the params is the good type of the columns, and formmatting it
-        Params:
-            - param_name (str): the name of the column
-            - value (any): the value of the filter
-            - model (SQLA model)
-            - q (SQLA Query)
+    Generate a query with the filter given, checking the params is the good type of the columns, and formmatting it
+    Params:
+        - param_name (str): the name of the column
+        - value (any): the value of the filter
+        - model (SQLA model)
+        - q (SQLA Query)
     """
     # check the attribut exist in the model
     try:
@@ -52,22 +52,17 @@ def test_type_and_generate_query(param_name, value, model, q):
         try:
             return q.filter(col == int(value))
         except Exception as e:
-            raise UtilsSqlaError(
-                "{0} must be an integer".format(param_name))
+            raise UtilsSqlaError("{0} must be an integer".format(param_name))
     if sql_type == Numeric or isinstance(sql_type, (Numeric)):
         try:
             return q.filter(col == float(value))
         except Exception as e:
-            raise UtilsSqlaError(
-                "{0} must be an float (decimal separator .)".format(param_name)
-            )
+            raise UtilsSqlaError("{0} must be an float (decimal separator .)".format(param_name))
     if sql_type == DateTime or isinstance(sql_type, (Date, DateTime)):
         try:
             return q.filter(col == parser.parse(value))
         except Exception as e:
-            raise UtilsSqlaError(
-                "{0} must be an date (yyyy-mm-dd)".format(param_name)
-            )
+            raise UtilsSqlaError("{0} must be an date (yyyy-mm-dd)".format(param_name))
 
     if sql_type == Boolean or isinstance(sql_type, Boolean):
         try:
@@ -93,34 +88,33 @@ SERIALIZERS = {
 
 class GenericTable:
     """
-        Classe permettant de créer à la volée un mapping
-            d'une vue avec la base de données par rétroingénierie
+    Classe permettant de créer à la volée un mapping
+        d'une vue avec la base de données par rétroingénierie
     """
 
     def __init__(self, tableName, schemaName, engine):
-        '''
-            params:
-                - tableName
-                - schemaName
-                - engine : sqlalchemy instance engine
-                    for exemple : DB.engine if DB = Sqlalchemy()
-        '''
+        """
+        params:
+            - tableName
+            - schemaName
+            - engine : sqlalchemy instance engine
+                for exemple : DB.engine if DB = Sqlalchemy()
+        """
         meta = MetaData(schema=schemaName, bind=engine)
         meta.reflect(views=True)
 
         try:
             self.tableDef = meta.tables["{}.{}".format(schemaName, tableName)]
         except KeyError:
-            raise KeyError("table {}.{} doesn't exists".format(
-                schemaName, tableName))
+            raise KeyError("table {}.{} doesn't exists".format(schemaName, tableName))
 
         # Mise en place d'un mapping des colonnes en vue d'une sérialisation
         self.serialize_columns, self.db_cols = self.get_serialized_columns()
 
     def get_serialized_columns(self, serializers=SERIALIZERS):
         """
-            Return a tuple of serialize_columns, and db_cols
-            from the generic table
+        Return a tuple of serialize_columns, and db_cols
+        from the generic table
         """
         regular_serialize = []
         db_cols = []
@@ -128,9 +122,7 @@ class GenericTable:
             if not db_col.type.__class__.__name__ == "Geometry":
                 serialize_attr = (
                     name,
-                    serializers.get(
-                        db_col.type.__class__.__name__.lower(), lambda x: x
-                    ),
+                    serializers.get(db_col.type.__class__.__name__.lower(), lambda x: x),
                 )
                 regular_serialize.append(serialize_attr)
 
@@ -140,31 +132,32 @@ class GenericTable:
     def as_dict(self, data, columns=[], fields=[]):
         fields = list(chain(fields, columns))
         if columns:
-            warn("'columns' argument is deprecated. Please add columns to serialize "
-                    "directly in 'fields' argument.", DeprecationWarning)
+            warn(
+                "'columns' argument is deprecated. Please add columns to serialize "
+                "directly in 'fields' argument.",
+                DeprecationWarning,
+            )
         if fields:
-            fprops = list(
-                filter(lambda d: d[0] in fields, self.serialize_columns))
+            fprops = list(filter(lambda d: d[0] in fields, self.serialize_columns))
         else:
             fprops = self.serialize_columns
 
         return {item: _serializer(getattr(data, item)) for item, _serializer in fprops}
 
 
-
 class GenericQuery:
     """
-        Classe permettant de manipuler des objets GenericTable
+    Classe permettant de manipuler des objets GenericTable
 
-        params:
-            - DB: sqlalchemy instantce (DB if DB = Sqlalchemy())
-            - tableName
-            - schemaName
-            - filters: array of filter of the query
-            - engine : sqlalchemy instance engine
-                for exemple : DB.engine if DB = Sqlalchemy()
-            - limit
-            - offset
+    params:
+        - DB: sqlalchemy instantce (DB if DB = Sqlalchemy())
+        - tableName
+        - schemaName
+        - filters: array of filter of the query
+        - engine : sqlalchemy instance engine
+            for exemple : DB.engine if DB = Sqlalchemy()
+        - limit
+        - offset
     """
 
     def __init__(
@@ -186,7 +179,7 @@ class GenericQuery:
 
     def build_query_filters(self, query, parameters):
         """
-            Construction des filtres
+        Construction des filtres
         """
         for f in parameters:
             query = self.build_query_filter(query, f, parameters.get(f))
@@ -195,8 +188,7 @@ class GenericQuery:
 
     def build_query_filter(self, query, param_name, param_value):
         if param_name in self.view.tableDef.columns.keys():
-            query = query.filter(
-                self.view.tableDef.columns[param_name] == param_value)
+            query = query.filter(self.view.tableDef.columns[param_name] == param_value)
 
         if param_name.startswith("ilike_"):
             col = self.view.tableDef.columns[param_name[6:]]
@@ -235,7 +227,7 @@ class GenericQuery:
         #   et prend la forme suivante : nom_colonne[:ASC|DESC]
         if parameters.get("orderby", None).replace(" ", ""):
             order_by = parameters.get("orderby")
-            col, *sort = order_by.split(':')
+            col, *sort = order_by.split(":")
             if col in self.view.tableDef.columns.keys():
                 ordel_col = getattr(self.view.tableDef.columns, col)
                 if (sort[0:1] or ["ASC"])[0].lower() == "desc":
@@ -245,7 +237,7 @@ class GenericQuery:
 
     def query(self):
         """
-            Lance la requete et retourne l'objet sqlalchemy
+        Lance la requete et retourne l'objet sqlalchemy
         """
         q = self.DB.session.query(self.view.tableDef)
         nb_result_without_filter = q.count()
@@ -266,8 +258,8 @@ class GenericQuery:
 
     def return_query(self):
         """
-            Lance la requete (execute self.query())
-                et retourne les résutats dans un format standard
+        Lance la requete (execute self.query())
+            et retourne les résutats dans un format standard
 
         """
 
@@ -318,6 +310,6 @@ def serializeQueryTest(data, column_def):
                 elif isinstance(c["type"], Numeric):
                     inter[c["name"]] = float(getattr(row, c["name"]))
                 # elif not isinstance(c["type"], Geometry):
-                    # inter[c["name"]] = getattr(row, c["name"])
+                # inter[c["name"]] = getattr(row, c["name"])
         rows.append(inter)
     return rows

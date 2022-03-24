@@ -184,12 +184,11 @@ class TestSmartRelationshipsMixin:
             },
         )
 
-
     def test_polymorphic_model(self):
         class PolyModel(db.Model):
             __mapper_args__ = {
-                'polymorphic_identity': 'IdentityBase',
-                'polymorphic_on': 'kind',
+                "polymorphic_identity": "IdentityBase",
+                "polymorphic_on": "kind",
             }
             pk = db.Column(db.Integer, primary_key=True)
             kind = db.Column(db.String)
@@ -201,7 +200,7 @@ class TestSmartRelationshipsMixin:
 
         class PolyModelA(PolyModel):
             __mapper_args__ = {
-                'polymorphic_identity': 'A',
+                "polymorphic_identity": "A",
             }
             pk = db.Column(db.Integer, db.ForeignKey(PolyModel.pk), primary_key=True)
             a = db.Column(db.String)
@@ -212,7 +211,7 @@ class TestSmartRelationshipsMixin:
 
         class PolyModelB(PolyModel):
             __mapper_args__ = {
-                'polymorphic_identity': 'B',
+                "polymorphic_identity": "B",
             }
             pk = db.Column(db.Integer, db.ForeignKey(PolyModel.pk), primary_key=True)
             b = db.Column(db.String)
@@ -221,25 +220,25 @@ class TestSmartRelationshipsMixin:
             class Meta:
                 model = PolyModelB
 
-        a = PolyModelA(pk=1, base='BA', a='A')
+        a = PolyModelA(pk=1, base="BA", a="A")
         TestCase().assertDictEqual(
             PolyModelASchema().dump(a),
             {
-                'pk': 1,
-                'kind': 'A',
-                'base': 'BA',
-                'a': 'A',
+                "pk": 1,
+                "kind": "A",
+                "base": "BA",
+                "a": "A",
             },
         )
 
-        b = PolyModelB(pk=2, base='BB', b='B')
+        b = PolyModelB(pk=2, base="BB", b="B")
         TestCase().assertDictEqual(
             PolyModelBSchema().dump(b),
             {
-                'pk': 2,
-                'kind': 'B',
-                'base': 'BB',
-                'b': 'B',
+                "pk": 2,
+                "kind": "B",
+                "base": "BB",
+                "b": "B",
             },
         )
 
@@ -251,24 +250,25 @@ class TestSmartRelationshipsMixin:
 
             @hybrid_property
             def concat(self):
-                return '{0} {1}'.format(self.part1, self.part2)
+                return "{0} {1}".format(self.part1, self.part2)
 
             @concat.expression
             def concat(cls):
-                return db.func.concat(cls.part1, ' ', cls.part2)
+                return db.func.concat(cls.part1, " ", cls.part2)
 
         class HybridModelSchema(SmartRelationshipsMixin, SQLAlchemyAutoSchema):
             class Meta:
                 model = HybridModel
-            concat = ma.fields.String(dump_only=True) 
 
-        h = HybridModel(pk=1, part1='a', part2='b')
+            concat = ma.fields.String(dump_only=True)
+
+        h = HybridModel(pk=1, part1="a", part2="b")
         TestCase().assertDictEqual(
             HybridModelSchema().dump(h),
             {
-                'pk': 1,
-                'part1': 'a',
-                'part2': 'b',
-                'concat': 'a b',
+                "pk": 1,
+                "part1": "a",
+                "part2": "b",
+                "concat": "a b",
             },
         )
