@@ -8,3 +8,6 @@ testpaths = [
 omit = [
     "*/tests/*",
 ]
+
+[tool.black]
+line-length = 99
