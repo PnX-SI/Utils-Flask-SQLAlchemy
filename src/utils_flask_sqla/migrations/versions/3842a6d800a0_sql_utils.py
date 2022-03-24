@@ -12,14 +12,15 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '3842a6d800a0'
+revision = "3842a6d800a0"
 down_revision = None
-branch_labels = ('sql_utils',)
+branch_labels = ("sql_utils",)
 depends_on = None
 
 
 def upgrade():
-    op.execute('''
+    op.execute(
+        """
 CREATE OR REPLACE FUNCTION public.fct_trg_meta_dates_change()
     RETURNS trigger AS
     $BODY$
@@ -37,10 +38,13 @@ CREATE OR REPLACE FUNCTION public.fct_trg_meta_dates_change()
     $BODY$
 LANGUAGE plpgsql VOLATILE
 COST 100;
-''')
+"""
+    )
 
 
 def downgrade():
-    op.execute('''
+    op.execute(
+        """
 DROP FUNCTION public.fct_trg_meta_dates_change();
-    ''')
+    """
+    )

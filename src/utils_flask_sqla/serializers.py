@@ -53,22 +53,21 @@ def get_serializable_decorator(fields=[], exclude=[], stringify=True):
     default_fields = fields
     default_exclude = exclude
     default_stringify = stringify
-    firstlevel_default_fields = { field.split('.')[0]
-                                  for field in default_fields }
+    firstlevel_default_fields = {field.split(".")[0] for field in default_fields}
 
     def _serializable(cls):
         """
-            Décorateur de classe pour les DB.Models
-            Permet de rajouter la fonction as_dict
-            qui est basée sur le mapping SQLAlchemy
+        Décorateur de classe pour les DB.Models
+        Permet de rajouter la fonction as_dict
+        qui est basée sur le mapping SQLAlchemy
         """
 
         mapper = inspect(cls)
 
         def get_cls_db_columns():
             """
-                Liste des propriétés sérialisables de la classe
-                associées à leur sérializer en fonction de leur type
+            Liste des propriétés sérialisables de la classe
+            associées à leur sérializer en fonction de leur type
             """
             cls_db_columns = []
             for prop in cls.__mapper__.column_attrs:
@@ -78,18 +77,17 @@ def get_serializable_decorator(fields=[], exclude=[], stringify=True):
                     db_col = prop.columns[-1]
                     # HACK
                     #  -> Récupération du nom de l'attribut sans la classe
-                    name = str(prop).split('.', 1)[1]
-                    if db_col.type.__class__.__name__ == 'Geometry':
+                    name = str(prop).split(".", 1)[1]
+                    if db_col.type.__class__.__name__ == "Geometry":
                         continue
                     if name in exclude:
                         continue
-                    cls_db_columns.append((
-                        name,
-                        SERIALIZERS.get(
-                            db_col.type.__class__.__name__.lower(),
-                            lambda x: x
+                    cls_db_columns.append(
+                        (
+                            name,
+                            SERIALIZERS.get(db_col.type.__class__.__name__.lower(), lambda x: x),
                         )
-                    ))
+                    )
             """
                 Liste des propriétés synonymes
                 sérialisables de la classe
@@ -98,32 +96,25 @@ def get_serializable_decorator(fields=[], exclude=[], stringify=True):
             for syn in cls.__mapper__.synonyms:
                 col = cls.__mapper__.c[syn.name]
                 # if column type is geometry pass
-                if col.type.__class__.__name__ == 'Geometry':
+                if col.type.__class__.__name__ == "Geometry":
                     pass
 
                 # else add synonyms in columns properties
-                cls_db_columns.append((
-                    syn.key,
-                    SERIALIZERS.get(
-                        col.type.__class__.__name__.lower(),
-                        lambda x: x
-                    )
-                ))
+                cls_db_columns.append(
+                    (syn.key, SERIALIZERS.get(col.type.__class__.__name__.lower(), lambda x: x))
+                )
             return cls_db_columns
 
         def get_cls_db_relationships():
             """
-                Liste des propriétés de type relationship
-                uselist permet de savoir si c'est une collection de sous objet
-                sa valeur est déduite du type de relation
-                (OneToMany, ManyToOne ou ManyToMany)
+            Liste des propriétés de type relationship
+            uselist permet de savoir si c'est une collection de sous objet
+            sa valeur est déduite du type de relation
+            (OneToMany, ManyToOne ou ManyToMany)
             """
             return [
-                (
-                    db_rel.key,
-                    db_rel.uselist,
-                    getattr(cls, db_rel.key).mapper.class_
-                ) for db_rel in cls.__mapper__.relationships
+                (db_rel.key, db_rel.uselist, getattr(cls, db_rel.key).mapper.class_)
+                for db_rel in cls.__mapper__.relationships
             ]
 
         @lru_cache(maxsize=None)
@@ -136,10 +127,10 @@ def get_serializable_decorator(fields=[], exclude=[], stringify=True):
                 additional_fields = set()
                 relationship_fields = set()
                 for field in fields:
-                    if field.split('.')[0] in mapper.relationships:
+                    if field.split(".")[0] in mapper.relationships:
                         relationship_fields.add(field)
-                    elif field.startswith('+'):
-                        field = field.lstrip('+')
+                    elif field.startswith("+"):
+                        field = field.lstrip("+")
                         additional_fields.add(field)
                     else:
                         base_fields.add(field)
@@ -158,48 +149,63 @@ def get_serializable_decorator(fields=[], exclude=[], stringify=True):
                 exclude = _default_exclude
 
             # take 'a' instead of 'a.b'
-            firstlevel_fields = [ rel.split('.')[0] for rel in fields ]
+            firstlevel_fields = [rel.split(".")[0] for rel in fields]
 
-            properties = { key: None
-                           for key in dir(cls)
-                           if isinstance(getattr_static(cls, key), property) }
-            hybrid_properties = { key: attr
-                                  for key, attr in mapper.all_orm_descriptors.items()
-                                  if attr.extension_type == HYBRID_PROPERTY }
-            for field in set([ f for f in fields if '.' not in f ]) \
-                    - set(mapper.column_attrs.keys()) \
-                    - set(properties.keys()) \
-                    - set(hybrid_properties.keys()) \
-                    - set(mapper.relationships.keys()):
+            properties = {
+                key: None for key in dir(cls) if isinstance(getattr_static(cls, key), property)
+            }
+            hybrid_properties = {
+                key: attr
+                for key, attr in mapper.all_orm_descriptors.items()
+                if attr.extension_type == HYBRID_PROPERTY
+            }
+            for field in (
+                set([f for f in fields if "." not in f])
+                - set(mapper.column_attrs.keys())
+                - set(properties.keys())
+                - set(hybrid_properties.keys())
+                - set(mapper.relationships.keys())
+            ):
                 raise Exception(f"Field '{field}' does not exist on {cls}.")
-            for field in set([ f.split('.')[0] for f in fields if '.' in f ]) \
-                    - set(mapper.relationships.keys()):
+            for field in set([f.split(".")[0] for f in fields if "." in f]) - set(
+                mapper.relationships.keys()
+            ):
                 raise Exception(f"Relationship '{field}' does not exist on {cls}.")
 
-            _columns = { key: col
-                         for key, col in ChainMap(dict(mapper.column_attrs), properties, hybrid_properties).items()
-                         if key in fields }
-            _relationships = { key: rel
-                               for key, rel in mapper.relationships.items()
-                               if key in firstlevel_fields }
+            _columns = {
+                key: col
+                for key, col in ChainMap(
+                    dict(mapper.column_attrs), properties, hybrid_properties
+                ).items()
+                if key in fields
+            }
+            _relationships = {
+                key: rel for key, rel in mapper.relationships.items() if key in firstlevel_fields
+            }
             if not _columns:
                 _columns = ChainMap(dict(mapper.column_attrs), properties, hybrid_properties)
             if exclude:
-                _columns = { key: col
-                             for key, col in _columns.items()
-                             if key not in exclude }
-                _relationships = { key: rel
-                                   for key, rel in _relationships.items()
-                                   if key not in exclude }
+                _columns = {key: col for key, col in _columns.items() if key not in exclude}
+                _relationships = {
+                    key: rel for key, rel in _relationships.items() if key not in exclude
+                }
 
-            _columns = { key: (col, get_serializer(col))
-                         for key, col in _columns.items() }
+            _columns = {key: (col, get_serializer(col)) for key, col in _columns.items()}
 
             return fields, exclude, _columns, _relationships
 
-        def serializefn(self, recursif=False, columns=[], relationships=[],
-                        fields=None, exclude=None, stringify=None, unloaded=None,
-                        depth=None, _excluded_mappers=[]):
+        def serializefn(
+            self,
+            recursif=False,
+            columns=[],
+            relationships=[],
+            fields=None,
+            exclude=None,
+            stringify=None,
+            unloaded=None,
+            depth=None,
+            _excluded_mappers=[],
+        ):
             """
             Méthode qui renvoie les données de l'objet sous la forme d'un dict
 
@@ -243,14 +249,20 @@ def get_serializable_decorator(fields=[], exclude=[], stringify=True):
                 stringify = default_stringify
 
             if columns:
-                warn("'columns' argument is deprecated. Please add columns to serialize "
-                     "directly in 'fields' argument.", DeprecationWarning)
+                warn(
+                    "'columns' argument is deprecated. Please add columns to serialize "
+                    "directly in 'fields' argument.",
+                    DeprecationWarning,
+                )
                 if fields is None:
                     fields = []
                 fields = chain(fields, columns)
             if relationships:
-                warn("'relationships' argument is deprecated. Please add relationships to serialize "
-                     "directly in 'fields' argument.", DeprecationWarning)
+                warn(
+                    "'relationships' argument is deprecated. Please add relationships to serialize "
+                    "directly in 'fields' argument.",
+                    DeprecationWarning,
+                )
                 if fields is None:
                     fields = []
                 fields = chain(fields, relationships)
@@ -258,15 +270,23 @@ def get_serializable_decorator(fields=[], exclude=[], stringify=True):
             if depth:
                 recursif = True
             if recursif:
-                warn("'recursif' argument is deprecated. Please add relationships to serialize "
-                     "directly in 'fields' argument.", DeprecationWarning)
-                _excluded_mappers = _excluded_mappers + [ mapper ]
+                warn(
+                    "'recursif' argument is deprecated. Please add relationships to serialize "
+                    "directly in 'fields' argument.",
+                    DeprecationWarning,
+                )
+                _excluded_mappers = _excluded_mappers + [mapper]
                 if depth is None or depth > 0:
                     if fields is None:
                         fields = []
-                    fields = chain(fields, [ rel.key for rel in mapper.relationships
-                                             if rel.key not in fields
-                                             and rel.mapper not in _excluded_mappers ])
+                    fields = chain(
+                        fields,
+                        [
+                            rel.key
+                            for rel in mapper.relationships
+                            if rel.key not in fields and rel.mapper not in _excluded_mappers
+                        ],
+                    )
                     if depth:
                         depth -= 1
 
@@ -275,13 +295,15 @@ def get_serializable_decorator(fields=[], exclude=[], stringify=True):
             if exclude is not None:
                 exclude = frozenset(exclude)
 
-            fields, exclude, _columns, _relationships = get_columns_and_relationships(fields, exclude)
+            fields, exclude, _columns, _relationships = get_columns_and_relationships(
+                fields, exclude
+            )
 
             serialize_kwargs = {
-                'recursif': recursif,
-                'depth': depth,
-                'unloaded': unloaded,
-                '_excluded_mappers': _excluded_mappers,
+                "recursif": recursif,
+                "depth": depth,
+                "unloaded": unloaded,
+                "_excluded_mappers": _excluded_mappers,
             }
 
             data = {}
@@ -295,21 +317,21 @@ def get_serializable_decorator(fields=[], exclude=[], stringify=True):
                     m = inspect(self)
                     if key in m.unloaded:
                         err = f"Relationship '{key}' on '{self}' is not loaded"
-                        if unloaded == 'raise':
+                        if unloaded == "raise":
                             raise Exception(err)
-                        elif unloaded == 'warn':
+                        elif unloaded == "warn":
                             warn(err)
                 kwargs = serialize_kwargs.copy()
-                _fields = [ field.split('.', 1)[1]
-                            for field in fields
-                            if field.startswith(f'{key}.') ]
-                kwargs['fields'] = _fields or None
-                _exclude = [ field.split('.', 1)[1]
-                             for field in exclude
-                             if field.startswith(f'{key}.') ]
-                kwargs['exclude'] = _exclude or None
+                _fields = [
+                    field.split(".", 1)[1] for field in fields if field.startswith(f"{key}.")
+                ]
+                kwargs["fields"] = _fields or None
+                _exclude = [
+                    field.split(".", 1)[1] for field in exclude if field.startswith(f"{key}.")
+                ]
+                kwargs["exclude"] = _exclude or None
                 if rel.uselist:
-                    data[key] = [ o.as_dict(**kwargs) for o in getattr(self, key) ]
+                    data[key] = [o.as_dict(**kwargs) for o in getattr(self, key)]
                 else:
                     rel_object = getattr(self, rel.key)
                     if rel_object:
@@ -317,11 +339,11 @@ def get_serializable_decorator(fields=[], exclude=[], stringify=True):
                     else:  # relationship may be null
                         data[rel.key] = None
             return data
+
         serializefn.__original_decorator = True
 
-
         def populatefn(self, dict_in, recursif=False):
-            '''
+            """
             Méthode qui initie les valeurs de l'objet à partir d'un dictionnaire
 
             Parameters
@@ -329,7 +351,7 @@ def get_serializable_decorator(fields=[], exclude=[], stringify=True):
                 dict_in : dictionnaire contenant les valeurs à passer à l'objet
                 recursif: si on renseigne les relationships
 
-            '''
+            """
 
             cls_db_columns_key = list(map(lambda x: x[0], get_cls_db_columns()))
 
@@ -374,22 +396,12 @@ def get_serializable_decorator(fields=[], exclude=[], stringify=True):
                         values_inter.append(data)
                     values = values_inter
 
-
-
                 # preload with id
                 # pour faire une seule requête
-                ids = filter(
-                    lambda x: x,
-                    map(
-                        lambda x: x.get(id_field_name),
-                        values
-                    )
-                )
-                preload_res_with_ids = (
-                    Model.query
-                    .filter(getattr(Model, id_field_name).in_(ids))
-                    .all()
-                )
+                ids = filter(lambda x: x, map(lambda x: x.get(id_field_name), values))
+                preload_res_with_ids = Model.query.filter(
+                    getattr(Model, id_field_name).in_(ids)
+                ).all()
 
                 # resul
                 v_obj = []
@@ -409,39 +421,39 @@ def get_serializable_decorator(fields=[], exclude=[], stringify=True):
                         list(
                             filter(
                                 lambda x: getattr(x, id_field_name) == id_value,
-                                preload_res_with_ids
+                                preload_res_with_ids,
                             )
                         )[0]
                         if id_value and len(preload_res_with_ids)
                         # sinon on cree une nouvelle instance
                         else Model()
                     )
-                    if hasattr(res, 'from_dict'):
+                    if hasattr(res, "from_dict"):
                         res.from_dict(data, recursif)
 
                     v_obj.append(res)
 
                 # attribution de la relation
                 # si uselist est à false -> on prend le premier de la liste
-                setattr(
-                    self,
-                    rel,
-                    v_obj if uselist else v_obj[0]
-                )
+                setattr(self, rel, v_obj if uselist else v_obj[0])
 
             return self
 
-        if hasattr(cls, 'as_dict'):
+        if hasattr(cls, "as_dict"):
             # the Model has a as_dict(self, data) method, which expects serialized data as argument
             if len(signature(cls.as_dict).parameters) == 2:
                 userfn = cls.as_dict
+
                 def chainedserializefn(self, *args, **kwargs):
                     return userfn(self, serializefn(self, *args, **kwargs))
+
                 cls.as_dict = chainedserializefn
             # the Model has its own as_dict method
-            elif 'as_dict' in vars(cls):
+            elif "as_dict" in vars(cls):
                 # the serialize decorator is applied a second time with new default arguments
-                if hasattr(cls.as_dict, '__original_decorator') and (default_fields or default_exclude):
+                if hasattr(cls.as_dict, "__original_decorator") and (
+                    default_fields or default_exclude
+                ):
                     cls.as_dict = serializefn
                 # which will call super().as_dict() it-self
                 else:
