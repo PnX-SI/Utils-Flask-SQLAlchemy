@@ -9,7 +9,7 @@ from shapely import wkt
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.dialects.postgresql import UUID, HSTORE, ARRAY, JSON, JSONB
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, column_property
 from geoalchemy2 import Geometry
 
 from utils_flask_sqla.serializers import serializable
@@ -380,16 +380,40 @@ class TestSerializers:
         @serializable(stringify=False)
         class Model(db.Model):
             pk = db.Column(db.Integer, primary_key=True)
+            field1 = db.Column(db.String)
+            field2 = db.Column(db.String)
 
-        obj = Model(pk=1)
-        d = obj.as_dict(fields=["pk"])
-        TestCase().assertDictEqual({"pk": 1}, d)
+            @property
+            def field3(self):
+                return self.field1 + self.field2
+
+            @hybrid_property
+            def field4(self):
+                return self.field1 + self.field2
+
+            field5 = column_property(field1 + field2)
+
+            parent_pk = db.Column(db.Integer, db.ForeignKey(Parent.pk))
+            parent = relationship("Parent")
+
+        obj = Model(pk=1, field1="a", field2="b")
+        d = obj.as_dict(fields=["pk", "field3", "field4", "field5", "parent"])
+        TestCase().assertDictEqual(
+            {"pk": 1, "field3": "ab", "field4": "ab", "field5": None, "parent": None},
+            d,
+        )
         with pytest.raises(Exception) as excinfo:
             obj.as_dict(fields=["unexisting"])
-        assert "does not exist on" in str(excinfo.value)
+        assert "'unexisting' does not exist on" in str(excinfo.value)
         with pytest.raises(Exception) as excinfo:
             obj.as_dict(fields=["pk.unexisting"])
-        assert "does not exist on" in str(excinfo.value)
+        assert "'pk' does not exist on" in str(excinfo.value)
+        with pytest.raises(Exception) as excinfo:
+            obj.as_dict(fields=["+unexisting"])
+        assert "'unexisting' does not exist on" in str(excinfo.value)
+        with pytest.raises(Exception) as excinfo:
+            obj.as_dict(fields=["pk", "+unexisting"])
+        assert "'unexisting' does not exist on" in str(excinfo.value)
 
     def test_backward_compatibility(self):
         parent = Parent(pk=1)

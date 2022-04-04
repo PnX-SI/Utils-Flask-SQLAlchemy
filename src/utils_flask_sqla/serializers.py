@@ -120,11 +120,11 @@ def get_serializable_decorator(fields=[], exclude=[], stringify=True):
         @lru_cache(maxsize=None)
         def get_columns_and_relationships(fields=None, exclude=None):
             _default_exclude = set(default_exclude)
+            additional_fields = set()
             if fields is None:
                 fields = default_fields
             elif fields:
                 base_fields = set()
-                additional_fields = set()
                 relationship_fields = set()
                 for field in fields:
                     if field.split(".")[0] in mapper.relationships:
@@ -160,11 +160,10 @@ def get_serializable_decorator(fields=[], exclude=[], stringify=True):
                 if attr.extension_type == HYBRID_PROPERTY
             }
             for field in (
-                set([f for f in fields if "." not in f])
-                - set(mapper.column_attrs.keys())
+                (set([f for f in fields if "." not in f]) | additional_fields)
+                - set(mapper.attrs.keys())
                 - set(properties.keys())
                 - set(hybrid_properties.keys())
-                - set(mapper.relationships.keys())
             ):
                 raise Exception(f"Field '{field}' does not exist on {cls}.")
             for field in set([f.split(".")[0] for f in fields if "." in f]) - set(
