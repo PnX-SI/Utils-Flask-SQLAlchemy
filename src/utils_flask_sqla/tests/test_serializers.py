@@ -9,7 +9,7 @@ from shapely import wkt
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.dialects.postgresql import UUID, HSTORE, ARRAY, JSON, JSONB
-from sqlalchemy.orm import relationship, column_property
+from sqlalchemy.orm import relationship, deferred, column_property
 from geoalchemy2 import Geometry
 
 from utils_flask_sqla.serializers import serializable
@@ -912,4 +912,30 @@ class TestSerializers:
                 "v_set": [{"pk": 1, "u_pk": 1}],
             },
             d,
+        )
+
+    def test_deferred(self):
+        @serializable
+        class D(db.Model):
+            pk = db.Column(db.Integer, primary_key=True)
+            field1 = db.Column(db.String)
+            field2 = deferred(db.Column(db.String))
+            field3 = column_property(field1 + field2, deferred=True)
+
+        d = D(pk=1, field1="f1", field2="f2")
+        TestCase().assertDictEqual(
+            {
+                "pk": 1,
+                "field1": "f1",
+            },
+            d.as_dict(),
+        )
+        TestCase().assertDictEqual(
+            {
+                "pk": 1,
+                "field1": "f1",
+                "field2": "f2",
+                "field3": None,
+            },
+            d.as_dict(fields=["+field2", "+field3"]),
         )

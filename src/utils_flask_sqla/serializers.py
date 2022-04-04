@@ -119,7 +119,10 @@ def get_serializable_decorator(fields=[], exclude=[], stringify=True):
 
         @lru_cache(maxsize=None)
         def get_columns_and_relationships(fields=None, exclude=None):
-            _default_exclude = set(default_exclude)
+            deferred_columns = {
+                key for key, props in mapper.column_attrs.items() if props.deferred
+            }
+            _default_exclude = set(default_exclude) | deferred_columns
             additional_fields = set()
             if fields is None:
                 fields = default_fields
