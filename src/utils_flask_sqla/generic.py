@@ -245,6 +245,9 @@ class GenericQuery:
         if self.filters:
             unordered_q = self.build_query_filters(q, self.filters)
             q = self.build_query_order(unordered_q, self.filters)
+            nb_results = unordered_q.count()
+        else:
+            nb_results = q.count()
 
         # Si la limite spécifiée est égale à -1
         # les paramètres limit et offset ne sont pas pris en compte
