@@ -255,7 +255,6 @@ class GenericQuery:
             data = q.all()
         else:
             data = q.limit(self.limit).offset(self.offset * self.limit).all()
-        nb_results = unordered_q.count()
 
         return data, nb_result_without_filter, nb_results
 
