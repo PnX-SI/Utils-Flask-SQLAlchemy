@@ -12,7 +12,7 @@ from flask_migrate.cli import db as db_cli
 from flask.cli import with_appcontext
 
 
-def box_drowing(up, down, left, right):
+def box_drowing(up, down, left, right, bold=True):
     if not up and not down and not left and not right:
         return "─"
     elif up and not down and not left and not right:
@@ -24,7 +24,7 @@ def box_drowing(up, down, left, right):
     elif up and not down and left and not right:
         return "┛"
     elif up and not down and not left and right:
-        return "┗"
+        return "┗" if bold else "└"
     elif not up and not down and left and right:
         return "━"
     elif not up and down and left and not right:
@@ -32,7 +32,7 @@ def box_drowing(up, down, left, right):
     elif not up and down and not left and right:
         return "┏"
     elif up and down and not left and right:
-        return "┣"
+        return "┣" if bold else "├"
     elif up and down and left and not right:
         return "┫"
     elif up and not down and left and right:
@@ -88,9 +88,12 @@ def autoupgrade(directory, sql, tag, x_arg):
 @click.option(
     "-x", "--x-arg", multiple=True, help="Additional arguments consumed by custom env.py scripts"
 )
+@click.option(
+    "--deps", "--dependencies", "show_dependencies", is_flag=True, help="Show dependencies"
+)
 @click.argument("branches", nargs=-1)
 @with_appcontext
-def status(directory, x_arg, branches):
+def status(directory, x_arg, show_dependencies, branches):
     """Show all revisions sorted by branches."""
     db = current_app.extensions["sqlalchemy"].db
     migrate = current_app.extensions["migrate"].migrate
@@ -103,13 +106,49 @@ def status(directory, x_arg, branches):
     applied_rev = set(script.iterate_revisions(current_heads, "base"))
 
     bases = [script.get_revision(base) for base in script.get_bases()]
+    bases = {
+        next(iter(base.branch_labels)): base
+        for base in sorted(bases, key=lambda rev: next(iter(rev.branch_labels)))
+    }
     heads = [script.get_revision(head) for head in script.get_heads()]
 
+    def print_revision(
+        prefix, revision, *, file=None, show_branch_label=False, show_dependencies=False
+    ):
+        (branch_label,) = revision.branch_labels
+        branch_base = bases[branch_label]
+        if branch_base in applied_rev:
+            fg = "white" if revision in applied_rev else "red"
+        else:
+            fg = None
+        branch_display = f"({branch_label}) " if show_branch_label else ""
+        print(
+            click.style(f"{prefix}{branch_display}{revision.revision} {revision.doc}", fg=fg),
+            file=file,
+        )
+        if show_dependencies and revision.dependencies:
+            deps = (
+                (revision.dependencies,)
+                if type(revision.dependencies) == str
+                else revision.dependencies
+            )
+            for i, dep in enumerate(deps):
+                dep = script.get_revision(dep)
+                symbol = box_drowing(
+                    up=True, down=i < len(deps) - 1, left=False, right=True, bold=False
+                )
+                print_revision(
+                    " " * len(prefix) + symbol + " ",
+                    dep,
+                    file=output,
+                    show_branch_label=True,
+                    show_dependencies=show_dependencies,
+                )
+
     outdated = False
-    for branch_base in sorted(bases, key=lambda rev: next(iter(rev.branch_labels))):
+    for branch_label, branch_base in bases.items():
         output = StringIO()
-        (branch,) = branch_base.branch_labels
-        if branches and branch not in branches:
+        if branches and branch_label not in branches:
             continue
         levels = defaultdict(set)
         branch_outdated = False
@@ -160,16 +199,14 @@ def status(directory, x_arg, branches):
                     )
 
             check = "x" if rev in applied_rev else " "
-            if branch_base in applied_rev and rev in applied_rev:
-                fg = "white"
-            elif branch_base in applied_rev:
+            if branch_base in applied_rev and rev not in applied_rev:
                 outdated = True
                 branch_outdated = True
-                fg = "red"
-            else:
-                fg = None
-            print(
-                click.style(f"  [{check}] {symbol} {rev.revision} {rev.doc}", fg=fg), file=output
+            print_revision(
+                f"  [{check}] {symbol} ",
+                rev,
+                file=output,
+                show_dependencies=show_dependencies,
             )
 
         if branch_base in applied_rev:
@@ -180,7 +217,9 @@ def status(directory, x_arg, branches):
             fg = None
             mark = ""
         click.echo(
-            click.style(f"[{branch}", bold=True, fg=fg) + mark + click.style("]", bold=True, fg=fg)
+            click.style(f"[{branch_label}", bold=True, fg=fg)
+            + mark
+            + click.style("]", bold=True, fg=fg)
         )
         click.echo(output.getvalue(), nl=False)
 
