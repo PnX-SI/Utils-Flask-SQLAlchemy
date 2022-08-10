@@ -3,8 +3,7 @@ import io
 import json
 from functools import wraps
 
-from flask import Response
-from flask.json import JSONEncoder
+from flask import Response, current_app
 from werkzeug.datastructures import Headers
 
 
@@ -53,9 +52,8 @@ def to_json_resp(
             "attachment",
             filename="export_{}.{}".format(filename, extension),
         )
-    # use Flask JSONEncoder for raw sql query
     return Response(
-        json.dumps(res, ensure_ascii=False, indent=indent, cls=JSONEncoder),
+        current_app.json.dumps(res, ensure_ascii=False, indent=indent),
         status=status,
         mimetype="application/json",
         headers=headers,
