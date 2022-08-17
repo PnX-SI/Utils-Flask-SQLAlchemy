@@ -25,13 +25,14 @@ class open_remote_file(ExitStack):
         self.base_url = base_url
         self.filename = filename
         self.open_fct = open_fct
-        if not data_dir:
+        self.data_dir = None
+        if self.data_dir is None:
             try:
                 self.data_dir = context.get_x_argument(as_dictionary=True).get("data-directory")
             except NameError:  # not used in alembic migration
-                self.data_dir = os.environ.get("DATA_DIRECTORY")
-        else:
-            self.data_dir = data_dir
+                pass
+        if self.data_dir is None:
+            self.data_dir = os.environ.get("DATA_DIRECTORY")
 
     def __enter__(self):
         stack = super().__enter__()
