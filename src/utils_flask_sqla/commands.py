@@ -1,6 +1,7 @@
 from collections import deque, defaultdict
 from itertools import chain
 from io import StringIO
+import json
 
 import click
 import flask_migrate
@@ -43,6 +44,27 @@ def box_drowing(up, down, left, right, bold=True):
         return "╋"
     else:
         raise Exception("Unexpected box drowing symbol")
+
+
+@db_cli.command()
+@click.argument("command", nargs=-1, required=True)
+@click.option("--commit/--no-commit", default=True, help="Commit transaction.")
+@click.option("--json", "json_output", is_flag=True, help="Output commands results as JSON.")
+@with_appcontext
+def exec(command, commit, json_output):
+    db = current_app.extensions["sqlalchemy"].db
+    results = []
+    for cmd in command:
+        results.append(db.session.execute(cmd))
+    if commit:
+        db.session.commit()
+    if json_output:
+        results = [
+            [dict(row) for row in result] if result.returns_rows else [] for result in results
+        ]
+        if len(results) == 1:
+            (results,) = results
+        click.echo(json.dumps(results))
 
 
 @db_cli.command()
