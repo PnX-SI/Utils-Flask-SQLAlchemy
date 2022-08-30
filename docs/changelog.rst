@@ -2,6 +2,36 @@
 CHANGELOG
 =========
 
+0.3.0 (unreleased)
+------------------
+
+**🚀 Nouveautés**
+
+* Publication automatique des nouvelles releases sur `pypi <https://pypi.org/project/utils-flask-sqlalchemy/>`_.
+* Ajout de sous-commandes au group de commande ``db`` permettant de gérer la base de données avec Alembic (`Flask-Migrate <https://flask-migrate.readthedocs.io/en/latest/>`_)
+
+  * ``status`` : Affiche l’ensemble des révisions triées par branches avec leur status (appliquées ou non) et optionnellement leur dépendances.
+  * ``autoupgrade`` : Applique automatiquement toutes les révisions des branches en retard
+  * ``exec`` : permet d’exécuter des commandes SQL et de renvoyer leurs résultats en JSON
+
+* Amélioration du décorateur ``@serializable`` :
+
+  * Les champs marqués ``deferred`` sont par défaut exclus
+  * Support des modèles possédant des `properties` (``@property``).
+
+* Le code est désormais formaté avec `Black <https://black.readthedocs.io/en/stable/>`_ et ceci est vérifié par une Github Action.
+* Création du collation ``fr_numeric`` (branche Alembic ``sql_utils``).
+* Compatibilité Flask 2.
+* L’utilitaire ``open_remote_file`` peut chercher des fichiers dans le dossier spécifié par la variable d’environnement ``DATA_DIRECTORY`` pour un usage hors Alembic (pour ce dernier, il reste possible d’utiliser ``-x data-directory=…``).
+
+**🐛 Corrections**
+
+* Correction des requêtes génériques :
+
+  * Correction d’un bug lorsque les données sont ordonnées et amélioration des performances de comptage
+  * Changement du format du paramètre ``orderby``
+
+
 0.2.6 (2022-01-04)
 ------------------
 
