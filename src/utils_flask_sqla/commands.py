@@ -64,7 +64,7 @@ def exec(command, commit, json_output):
         ]
         if len(results) == 1:
             (results,) = results
-        click.echo(json.dumps(results))
+        click.echo(current_app.json.dumps(results))
 
 
 @db_cli.command()
