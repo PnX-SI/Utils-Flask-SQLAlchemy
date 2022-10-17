@@ -85,11 +85,14 @@ def to_csv_resp(filename, data, columns, separator=";"):
 
 def generate_csv_content(columns, data, separator):
     fp = io.StringIO()
-    writer = csv.DictWriter(
-        fp, columns, delimiter=separator, quoting=csv.QUOTE_ALL, extrasaction="ignore"
+    writer = csv.DictWriter(    # params d'entête
+        fp, columns, delimiter=separator, quoting=csv.QUOTE_NONE, extrasaction="ignore"
     )
     writer.writeheader()  # ligne d'entête
-
+    
+    writer = csv.DictWriter(    # params rows
+        fp, columns, delimiter=separator, quoting=csv.QUOTE_ALL, extrasaction="ignore"
+    )
     for line in data:
         writer.writerow(line)
     fp.seek(0)  # Rembobinage du "fichier"
