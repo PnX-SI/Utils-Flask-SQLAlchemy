@@ -8,7 +8,7 @@ CHANGELOG
 **🐛 Corrections**
 
 * Dé-sérialiseurs : `from_dict`
-  * ajout d'un test sur l'existance d'une valeur de clé primaire nulle dans les données avec de la supprimer.
+  * ajout d'un test sur l’existence d'une valeur de clé primaire nulle dans les données avant de la supprimer.
 
 0.3.3 (2023-04-11)
 ------------------

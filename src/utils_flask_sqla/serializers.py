@@ -408,12 +408,8 @@ def get_serializable_decorator(fields=[], exclude=[], stringify=True):
                 v_obj = []
 
                 for data in values:
-                    id_value = data.get(id_field_name)
 
-                    # si id_value est null
-                    # creation -> on supprime id_value
-                    if id_field_name in data and id_value is None:
-                        data.pop(id_field_name)
+                    id_value = data.pop(id_field_name, None)
 
                     res = (
                         # si on a une id -> on recupère dans la liste preload_res_with_ids
