@@ -7,6 +7,9 @@ from urllib.request import urlopen
 import lzma
 import os, os.path
 
+from ..utils import remote_file
+
+
 logger = logging.getLogger("alembic.runtime.migration")
 
 """
@@ -19,33 +22,17 @@ Si aucun dossier n’est spécifié, un dossier temporaire, supprimé à la fin 
 """
 
 
-class open_remote_file(ExitStack):
+class open_remote_file(remote_file):
     def __init__(self, base_url, filename, open_fct=lzma.open, data_dir=None):
-        super().__init__()
-        self.base_url = base_url
-        self.filename = filename
-        self.open_fct = open_fct
-        self.data_dir = None
-        if self.data_dir is None:
+        if data_dir is None:
             try:
-                self.data_dir = context.get_x_argument(as_dictionary=True).get("data-directory")
+                data_dir = context.get_x_argument(as_dictionary=True).get("data-directory")
             except NameError:  # not used in alembic migration
                 pass
-        if self.data_dir is None:
-            self.data_dir = os.environ.get("DATA_DIRECTORY")
+        url = "{}{}".format(base_url, filename)
+        super().__init__(url=url, filename=filename, data_dir=data_dir, logger=logger)
+        self.open_fct = open_fct
 
     def __enter__(self):
-        stack = super().__enter__()
-        if not self.data_dir:
-            self.data_dir = stack.enter_context(TemporaryDirectory())
-            logger.info("Created temporary directory '{}'".format(self.data_dir))
-        if not os.path.exists(self.data_dir):
-            os.mkdir(self.data_dir)
-        remote_file_path = os.path.join(self.data_dir, self.filename)
-        if not os.path.isfile(remote_file_path):
-            logger.info("Downloading '{}'…".format(self.filename))
-            with urlopen("{}{}".format(self.base_url, self.filename)) as response, open(
-                remote_file_path, "wb"
-            ) as remote_file:
-                copyfileobj(response, remote_file)
-        return stack.enter_context(self.open_fct(remote_file_path))
+        remote_file_path = super().__enter__()
+        return self.enter_context(self.open_fct(remote_file_path))
