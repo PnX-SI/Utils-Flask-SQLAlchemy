@@ -2,6 +2,18 @@
 CHANGELOG
 =========
 
+0.3.1 (2022-12-12)
+------------------
+
+**🚀 Nouveautés**
+
+* Ajout du context manager générique ``remote_file``, sur lequel vient s’appuyer le context manager ``open_remote_file`` qui ajoute l’ouverture du fichier récupéré.
+
+**🐛 Corrections**
+
+* Utilisation le l’encodeur JSON de Flask, supportant l’encodage des réponses SQLAlchemy
+
+
 0.3.0 (2022-08-30)
 ------------------
 
