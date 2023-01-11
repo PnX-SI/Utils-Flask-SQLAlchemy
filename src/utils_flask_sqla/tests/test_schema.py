@@ -272,3 +272,114 @@ class TestSmartRelationshipsMixin:
                 "concat": "a b",
             },
         )
+
+    def test_excluded_field(self):
+        class ExcludeSchema(SmartRelationshipsMixin, ma.Schema):
+            a = ma.fields.String(metadata={"exclude": False})
+            b = ma.fields.String(metadata={"exclude": True})
+            c = ma.fields.String()
+
+        s = {"a": "A", "b": "B", "c": "C"}
+        TestCase().assertDictEqual(
+            ExcludeSchema().dump(s),
+            {
+                "a": "A",
+                "c": "C",
+            },
+        )
+        TestCase().assertDictEqual(
+            ExcludeSchema(only=["a"]).dump(s),
+            {
+                "a": "A",
+            },
+        )
+        TestCase().assertDictEqual(
+            ExcludeSchema(only=["b"]).dump(s),
+            {
+                "b": "B",
+            },
+        )
+        TestCase().assertDictEqual(
+            ExcludeSchema(only=["+b"]).dump(s),
+            {
+                "a": "A",
+                "b": "B",
+                "c": "C",
+            },
+        )
+        TestCase().assertDictEqual(
+            ExcludeSchema(only=["+c"]).dump(s),
+            {
+                "a": "A",
+                "c": "C",
+            },
+        )
+        TestCase().assertDictEqual(ExcludeSchema(only=["c"], exclude=["c"]).dump(s), {})
+        TestCase().assertDictEqual(
+            ExcludeSchema(only=["+c"], exclude=["c"]).dump(s),
+            {
+                "a": "A",
+            },
+        )
+        TestCase().assertDictEqual(
+            ExcludeSchema(only=["a", "+b"]).dump(s),
+            {
+                "a": "A",
+                "b": "B",
+            },
+        )
+
+    def test_nested_excluded_field(self):
+        class ParentExcludeSchema(SmartRelationshipsMixin, ma.Schema):
+            child = ma.fields.Nested("ChildExcludeSchema")
+
+        class ChildExcludeSchema(SmartRelationshipsMixin, ma.Schema):
+            a = ma.fields.String(metadata={"exclude": False})
+            b = ma.fields.String(metadata={"exclude": True})
+
+            parent = ma.fields.Nested("ParentExcludeSchema")
+
+        p = {"child": {"a": "A", "b": "B"}}
+        TestCase().assertDictEqual(ParentExcludeSchema().dump(p), {})
+        TestCase().assertDictEqual(
+            ParentExcludeSchema(only=["child"]).dump(p),
+            {
+                "child": {
+                    "a": "A",
+                },
+            },
+        )
+        TestCase().assertDictEqual(
+            ParentExcludeSchema(only=["child.a"]).dump(p),
+            {
+                "child": {
+                    "a": "A",
+                },
+            },
+        )
+        TestCase().assertDictEqual(
+            ParentExcludeSchema(only=["child.b"]).dump(p),
+            {
+                "child": {
+                    "b": "B",
+                },
+            },
+        )
+        TestCase().assertDictEqual(
+            ParentExcludeSchema(only=["child.+b"]).dump(p),
+            {
+                "child": {
+                    "a": "A",
+                    "b": "B",
+                },
+            },
+        )
+        TestCase().assertDictEqual(
+            ParentExcludeSchema(only=["child.a", "child.+b"]).dump(p),
+            {
+                "child": {
+                    "a": "A",
+                    "b": "B",
+                },
+            },
+        )
