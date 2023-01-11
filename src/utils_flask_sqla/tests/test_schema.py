@@ -275,11 +275,16 @@ class TestSmartRelationshipsMixin:
 
     def test_excluded_field(self):
         class ExcludeSchema(SmartRelationshipsMixin, ma.Schema):
+            class Meta:
+                exclude = ("d",)
+
             a = ma.fields.String(metadata={"exclude": False})
             b = ma.fields.String(metadata={"exclude": True})
             c = ma.fields.String()
+            d = ma.fields.String()
 
-        s = {"a": "A", "b": "B", "c": "C"}
+        s = {"a": "A", "b": "B", "c": "C", "d": "D"}
+
         TestCase().assertDictEqual(
             ExcludeSchema().dump(s),
             {
