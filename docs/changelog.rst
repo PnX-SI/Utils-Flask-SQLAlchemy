@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+0.3.2 (2023-03-03)
+------------------
+
+**🚀 Nouveautés**
+
+* ``SmartRelationshipsMixin`` : possibilité d’exclure par défaut certains champs avec ``metadata={"exclude": True}``
+
+
 0.3.1 (2022-12-12)
 ------------------
 
