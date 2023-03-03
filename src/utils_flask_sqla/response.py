@@ -75,7 +75,6 @@ def csv_resp(fn):
 
 
 def to_csv_resp(filename, data, columns, separator=";"):
-
     headers = Headers()
     headers.add("Content-Type", "text/plain")
     headers.add("Content-Disposition", "attachment", filename="export_%s.csv" % filename)

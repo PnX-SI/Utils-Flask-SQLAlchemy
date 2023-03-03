@@ -369,8 +369,7 @@ def get_serializable_decorator(fields=[], exclude=[], stringify=True):
             # gestion des relationships
             frel = get_cls_db_relationships()
 
-            for (rel, uselist, Model) in frel:
-
+            for rel, uselist, Model in frel:
                 if rel not in dict_in:
                     continue
 
@@ -409,7 +408,6 @@ def get_serializable_decorator(fields=[], exclude=[], stringify=True):
                 v_obj = []
 
                 for data in values:
-
                     id_value = data.get(id_field_name)
 
                     # si id_value est null
