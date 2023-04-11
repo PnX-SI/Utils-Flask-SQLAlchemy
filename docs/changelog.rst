@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+0.3.3 (unreleased)
+------------------
+
+**🚀 Nouveautés**
+
+* Ajout de SQLAlchemy 1.4 aux tests unitaires
+
+
 0.3.2 (2023-03-03)
 ------------------
 
