@@ -4,7 +4,7 @@ import marshmallow as ma
 from marshmallow.fields import Nested
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema, auto_field
 from sqlalchemy import Column, Integer, String, ForeignKey
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, deferred
 from sqlalchemy.ext.hybrid import hybrid_property
 from flask_sqlalchemy import SQLAlchemy
 
@@ -388,3 +388,21 @@ class TestSmartRelationshipsMixin:
                 },
             },
         )
+
+    def test_deferred_field(self):
+        class DeferredModel(db.Model):
+            pk = db.Column(db.Integer, primary_key=True)
+            a = db.Column(db.String)
+            b = deferred(db.Column(db.String))
+
+        class DeferredSchema(SmartRelationshipsMixin, SQLAlchemyAutoSchema):
+            class Meta:
+                model = DeferredModel
+
+        d = DeferredModel(pk=1, a="A", b="B")
+
+        TestCase().assertDictEqual(DeferredSchema().dump(d), {"pk": 1, "a": "A"})
+        TestCase().assertDictEqual(
+            DeferredSchema(only=["+b"]).dump(d), {"pk": 1, "a": "A", "b": "B"}
+        )
+        TestCase().assertDictEqual(DeferredSchema(only=["b"]).dump(d), {"b": "B"})

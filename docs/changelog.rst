@@ -8,6 +8,7 @@ CHANGELOG
 **🚀 Nouveautés**
 
 * Ajout de SQLAlchemy 1.4 aux tests unitaires
+* ``SmartRelationshipsMixin``: exclusion par défaut des champs ``deferred``
 
 
 0.3.2 (2023-03-03)

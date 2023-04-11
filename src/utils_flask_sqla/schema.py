@@ -23,6 +23,12 @@ class SmartRelationshipsMixin:
                 nested_fields.add(name)
             elif field.metadata.get("exclude", False):
                 excluded_fields.add(name)
+            elif (
+                hasattr(self.opts, "model")
+                and hasattr(self.opts.model.__mapper__.column_attrs, name)
+                and getattr(self.opts.model.__mapper__.column_attrs, name).deferred
+            ):
+                excluded_fields.add(name)
             else:
                 included_fields.add(name)
 
