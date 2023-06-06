@@ -408,7 +408,6 @@ def get_serializable_decorator(fields=[], exclude=[], stringify=True):
                 v_obj = []
 
                 for data in values:
-
                     id_value = data.pop(id_field_name, None)
 
                     res = (
