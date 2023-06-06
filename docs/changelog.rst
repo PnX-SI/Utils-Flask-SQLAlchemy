@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+0.3.4 (2023-06-06)
+------------------
+
+**🐛 Corrections**
+
+* Dé-sérialiseurs : `from_dict`
+  * ajout d'un test sur l’existence d'une valeur de clé primaire nulle dans les données avant de la supprimer.
+
 0.3.3 (2023-04-11)
 ------------------
 
@@ -114,14 +122,14 @@ CHANGELOG
 
 **🐛 Corrections**
 
-* Correction des régressions de performance sur la sérialisation 
+* Correction des régressions de performance sur la sérialisation
 
 0.2.2 (2021-06-22)
 ------------------
 
 **🐛 Corrections**
 
-* Support des propriétés hybrides des modèles 
+* Support des propriétés hybrides des modèles
 * Ajout de tests sur les modèles polymorphiques
 
 0.2.1 (2021-06-03)
