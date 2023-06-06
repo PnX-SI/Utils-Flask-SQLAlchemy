@@ -4,11 +4,15 @@ CHANGELOG
 
 0.3.4 (2023-06-06)
 ------------------
+**🚀 Nouveautés**
+
+* GenericQuery : Ajout de filtres supérieur ou inférieur pour les entiers (``filter_d_up_nomchamp``, ``filter_d_lo_nomchamp``).
 
 **🐛 Corrections**
 
-* Dé-sérialiseurs : `from_dict`
-  * ajout d'un test sur l’existence d'une valeur de clé primaire nulle dans les données avant de la supprimer.
+* Correction d'une erreur lorsque le paramètre ``orderby`` est vide (#34).
+* Dé-sérialiseurs ``from_dict`` : ajout d'un test sur l’existence d'une valeur de clé primaire nulle dans les données avant de la supprimer.
+
 
 0.3.3 (2023-04-11)
 ------------------
