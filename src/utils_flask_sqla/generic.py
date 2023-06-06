@@ -1,12 +1,13 @@
 from itertools import chain
 from warnings import warn
 
-from sqlalchemy import MetaData
-from flask_sqlalchemy import SQLAlchemy
-from .errors import UtilsSqlaError
-from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.types import Integer, Date, DateTime, Numeric, Boolean
 from dateutil import parser
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import MetaData
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.types import Boolean, Date, DateTime, Integer, Numeric
+
+from .errors import UtilsSqlaError
 
 
 def testDataType(value, sqlType, paramName):
@@ -198,10 +199,12 @@ class GenericQuery:
         if param_name.startswith("filter_d_"):
             col = self.view.tableDef.columns[param_name[12:]]
             col_type = col.type.__class__.__name__
-            test_type = testDataType(param_value, DateTime, col)
+            test_type = testDataType(param_value, DateTime, col) and testDataType(
+                param_value, Integer, col
+            )
             if test_type:
                 raise UtilsSqlaError(message=test_type)
-            if col_type in ("Date", "DateTime", "TIMESTAMP"):
+            if col_type in ("Date", "DateTime", "TIMESTAMP", "INTEGER"):
                 if param_name.startswith("filter_d_up_"):
                     query = query.filter(col >= param_value)
                 if param_name.startswith("filter_d_lo_"):
@@ -225,7 +228,7 @@ class GenericQuery:
         # Ordonnancement
         # L'ordonnancement se base actuellement sur une seule colonne
         #   et prend la forme suivante : nom_colonne[:ASC|DESC]
-        if parameters.get("orderby", None).replace(" ", ""):
+        if parameters.get("orderby", "").replace(" ", ""):
             order_by = parameters.get("orderby")
             col, *sort = order_by.split(":")
             if col in self.view.tableDef.columns.keys():
@@ -235,26 +238,37 @@ class GenericQuery:
             return query.order_by(ordel_col)
         return query
 
-    def query(self):
+    def raw_query(self, process_filter=True):
         """
-        Lance la requete et retourne l'objet sqlalchemy
+        Renvoie la requete 'brute' (sans .all)
+        - process_filter: application des filtres (et du sort)
         """
+
         q = self.DB.session.query(self.view.tableDef)
-        nb_result_without_filter = q.count()
+
+        if not process_filter:
+            return q
 
         if self.filters:
             unordered_q = self.build_query_filters(q, self.filters)
             q = self.build_query_order(unordered_q, self.filters)
-            nb_results = unordered_q.count()
-        else:
-            nb_results = q.count()
 
-        # Si la limite spécifiée est égale à -1
-        # les paramètres limit et offset ne sont pas pris en compte
-        if self.limit == -1:
-            data = q.all()
-        else:
-            data = q.limit(self.limit).offset(self.offset * self.limit).all()
+        if self.limit != -1:
+            q.limit(self.limit).offset(self.offset * self.limit)
+
+        return q
+
+    def query(self):
+        """
+        Lance la requete et retourne l'objet sqlalchemy
+        """
+        q = self.raw_query(process_filter=False)
+        nb_result_without_filter = q.count()
+
+        q = self.raw_query()
+        nb_results = q.count() if self.filters else nb_result_without_filter
+
+        data = q.all()
 
         return data, nb_result_without_filter, nb_results
 
