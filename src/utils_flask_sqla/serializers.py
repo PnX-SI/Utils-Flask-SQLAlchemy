@@ -412,7 +412,7 @@ def get_serializable_decorator(fields=[], exclude=[], stringify=True):
 
                     # si id_value est null
                     # creation -> on supprime id_value
-                    if not id_value:
+                    if id_field_name in data and id_value is None:
                         data.pop(id_field_name)
 
                     res = (
