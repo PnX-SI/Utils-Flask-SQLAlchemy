@@ -184,7 +184,6 @@ class GenericQuery:
         """
         for f in parameters:
             query = self.build_query_filter(query, f, parameters.get(f))
-
         return query
 
     def build_query_filter(self, query, param_name, param_value):
@@ -248,13 +247,12 @@ class GenericQuery:
 
         if not process_filter:
             return q
-
         if self.filters:
             unordered_q = self.build_query_filters(q, self.filters)
             q = self.build_query_order(unordered_q, self.filters)
 
         if self.limit != -1:
-            q.limit(self.limit).offset(self.offset * self.limit)
+            q = q.limit(self.limit).offset(self.offset * self.limit)
 
         return q
 
