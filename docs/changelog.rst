@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+0.3.5 (2023-08-08)
+------------------
+
+**🐛 Corrections**
+
+* Correction de la limite non mise sur les GenericQuery
+
 0.3.4 (2023-06-06)
 ------------------
 **🚀 Nouveautés**
