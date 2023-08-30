@@ -237,7 +237,7 @@ class GenericQuery:
             return query.order_by(ordel_col)
         return query
 
-    def raw_query(self, process_filter=True):
+    def raw_query(self, process_filter=True, no_limit=False):
         """
         Renvoie la requete 'brute' (sans .all)
         - process_filter: application des filtres (et du sort)
@@ -251,7 +251,7 @@ class GenericQuery:
             unordered_q = self.build_query_filters(q, self.filters)
             q = self.build_query_order(unordered_q, self.filters)
 
-        if self.limit != -1:
+        if self.limit != -1 and not no_limit:
             q = q.limit(self.limit).offset(self.offset * self.limit)
 
         return q
@@ -263,9 +263,10 @@ class GenericQuery:
         q = self.raw_query(process_filter=False)
         nb_result_without_filter = q.count()
 
-        q = self.raw_query()
+        q = self.raw_query(no_limit=True)
         nb_results = q.count() if self.filters else nb_result_without_filter
 
+        q = self.raw_query()
         data = q.all()
 
         return data, nb_result_without_filter, nb_results
