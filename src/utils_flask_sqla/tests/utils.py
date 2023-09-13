@@ -24,5 +24,11 @@ class JSONClient(testing.FlaskClient):
                     }
                 )
             )
+        # the set_logged_user_jwt add a jwt attribute to client with the current logged user
+        jwt = getattr(self, "jwt", None)
+        if jwt:
+            jwt_headers = Headers({"Authorization": f"Bearer {jwt}"})
+            headers.extend(jwt_headers)
+
         kwargs["headers"] = headers
         return super().open(*args, **kwargs)
