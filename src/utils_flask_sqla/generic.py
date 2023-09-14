@@ -6,6 +6,7 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import MetaData
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.types import Boolean, Date, DateTime, Integer, Numeric
+from werkzeug.exceptions import BadRequest
 
 from .errors import UtilsSqlaError
 
@@ -234,7 +235,9 @@ class GenericQuery:
                 ordel_col = getattr(self.view.tableDef.columns, col)
                 if (sort[0:1] or ["ASC"])[0].lower() == "desc":
                     ordel_col = ordel_col.desc()
-            return query.order_by(ordel_col)
+                return query.order_by(ordel_col)
+            else:
+                raise BadRequest(f"No column name {col} to sort with")
         return query
 
     def set_limit(self, q):
