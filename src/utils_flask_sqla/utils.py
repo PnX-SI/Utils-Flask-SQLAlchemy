@@ -5,6 +5,8 @@ from contextlib import ExitStack
 from tempfile import TemporaryDirectory
 from shutil import copyfileobj
 from urllib.request import urlopen
+import uuid
+import collections
 
 
 class remote_file(ExitStack):
@@ -32,3 +34,35 @@ class remote_file(ExitStack):
             with urlopen(self.url) as response, open(remote_file_path, "wb") as remote_file:
                 copyfileobj(response, remote_file)
         return remote_file_path
+
+
+def dict_merge(dct, merge_dct):
+    """Recursive dict merge. Inspired by :meth:``dict.update()``, instead of
+    updating only top-level keys, dict_merge recurses down into dicts nested
+    to an arbitrary depth, updating keys. The ``merge_dct`` is merged into
+    ``dct``.
+    :param dct: dict onto which the merge is executed
+    :param merge_dct: dct merged into dct
+    :return: None
+    """
+    for k, v in merge_dct.items():
+        if (
+            k in dct
+            and isinstance(dct[k], dict)
+            and isinstance(merge_dct[k], collections.abc.Mapping)
+        ):
+            dict_merge(dct[k], merge_dct[k])
+        else:
+            dct[k] = merge_dct[k]
+
+
+def test_is_uuid(uuid_string):
+    try:
+        # Si uuid_string est un code hex valide mais pas un uuid valid,
+        # UUID() va quand même le convertir en uuid valide. Pour se prémunir
+        # de ce problème, on check la version original (sans les tirets) avec
+        # le code hex généré qui doivent être les mêmes.
+        uid = uuid.UUID(uuid_string)
+        return uid.hex == uuid_string.replace("-", "")
+    except ValueError:
+        return False
