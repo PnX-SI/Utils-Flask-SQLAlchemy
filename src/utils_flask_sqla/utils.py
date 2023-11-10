@@ -35,6 +35,7 @@ class remote_file(ExitStack):
                 copyfileobj(response, remote_file)
         return remote_file_path
 
+
 def is_already_joined(my_class, query):
     """
     Check if the given class is already present is the current query
@@ -44,7 +45,7 @@ def is_already_joined(my_class, query):
     """
     for visitor in visitors.iterate(query.statement):
         # Checking for `.join(Parent.child)` clauses
-        if visitor.__visit_name__ == 'binary':
+        if visitor.__visit_name__ == "binary":
             for vis in visitors.iterate(visitor):
                 # Visitor might not have table attribute
                 with suppress(AttributeError):
@@ -52,8 +53,8 @@ def is_already_joined(my_class, query):
                     if my_class.__table__.fullname == vis.table.fullname:
                         return True
         # Checking for `.join(Child)` clauses
-        if visitor.__visit_name__ == 'table':
-            # Visitor might be of ColumnCollection or so, 
+        if visitor.__visit_name__ == "table":
+            # Visitor might be of ColumnCollection or so,
             # which cannot be compared to model
             with suppress(TypeError):
                 if my_class == visitor.entity_namespace:
