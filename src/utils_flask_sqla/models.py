@@ -2,7 +2,7 @@ from .sqlalchemy import CustomSelect
 from flask_sqlalchemy.model import Model
 
 
-class SelectModelMixin(Model):
+class SelectModel(Model):
     __abstract__ = True
 
     @classmethod
