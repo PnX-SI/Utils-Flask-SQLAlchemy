@@ -7,9 +7,9 @@ class SelectModel(Model):
 
     @classmethod
     @property
-    def select(cls):
+    def select(cls, *entities):
         if hasattr(cls, "__select_class__"):
             select_cls = cls.__select_class__
         else:
             select_cls = CustomSelect
-        return select_cls._create_future_select(cls)  # SQLA 2.0: _create_future_select → _create
+        return select_cls(cls)  # SQLA 2.0: _create_future_select → _create
