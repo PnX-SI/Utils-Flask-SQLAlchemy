@@ -30,7 +30,6 @@ class BarModel(db.Model):
 def app():
     app = Flask("utils-flask-sqla")
     app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///"
-    app.config["SQLALCHEMY_ECHO"] = True
     db.init_app(app)
     with app.app_context():
         db.create_all()
