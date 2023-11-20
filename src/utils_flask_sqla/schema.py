@@ -7,11 +7,27 @@ from marshmallow_sqlalchemy.fields import RelatedList, Related
 class SmartRelationshipsMixin:
     """
     This mixin automatically exclude from serialization:
-    - Nested fields
-    - all fields with exclude=True in their metadata (e.g. fields.String(metadata={'exclude': True}))
-    Adding Nested fields to only will serialize defaults fields and specified Nested fields.
-    Adding exclude=True fields to only will serialize only specified fields (default marshmallow behaviour).
-    You can use '+field_name' syntax to serialize excluded fields without excluding defaults fields.
+
+    * Nested, RelatedList and Related fields
+    * all fields with exclude=True in their metadata (e.g. ``fields.String(metadata={'exclude': True})``)
+    Adding only Nested fields to ``only`` will not exclude others fields and serialize specified Nested fields.
+    Adding exclude=True fields to ``only`` will serialize only specified fields (default marshmallow behaviour).
+    You can use '+field_name' syntax on `only` to serialize default excluded fields (with metadata exclude = True) without other fields.
+
+    Examples :
+
+    .. code-block:: python
+
+       class FooSchema(SmartRelationshipsMixin):
+           id = fields.Int()
+           name = field.Str()
+           default_excluded_field = fields.Str(metadata={"exclude": True})
+           relationship = fields.Nested(OtherSchema) # or field.RelatedList() / field.Related()
+
+       FooSchema().dump() -> {"id": 1, "name": "toto" }
+       FooSchema(only=["+default_excluded_field"]).dump() -> {"id": 1, "name": "toto", default_excluded_field: "test" }
+       FooSchema(only=["relationship"]).dump() -> {"id": 1, "name": "toto",  relationship : {OtherSchema...} }
+       FooSchema(only=["id", "relationship"]).dump() -> {"id": 1, relationship : {OtherSchema...} }
     """
 
     def __init__(self, *args, **kwargs):
