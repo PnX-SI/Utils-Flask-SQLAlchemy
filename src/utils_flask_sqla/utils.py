@@ -56,7 +56,7 @@ def dict_merge(dct, merge_dct):
             dct[k] = merge_dct[k]
 
 
-def test_is_uuid(uuid_string):
+def is_uuid(uuid_string):
     try:
         # Si uuid_string est un code hex valide mais pas un uuid valid,
         # UUID() va quand même le convertir en uuid valide. Pour se prémunir
