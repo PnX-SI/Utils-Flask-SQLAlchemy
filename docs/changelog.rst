@@ -2,12 +2,19 @@
 CHANGELOG
 =========
 
+0.3.7 (unreleased)
+------------------
+
+**🐛 Corrections**
+
+* 
+
 0.3.6 (2023-09-14)
 ------------------
 
 **🐛 Corrections**
 
-* Correction du `total_filtered` #40 by @lpofrec
+* Correction du ``total_filtered`` (#40 by @lpofrec)
 
 0.3.5 (2023-08-08)
 ------------------
