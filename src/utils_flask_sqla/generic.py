@@ -101,8 +101,8 @@ class GenericTable:
             - engine : sqlalchemy instance engine
                 for exemple : DB.engine if DB = Sqlalchemy()
         """
-        meta = MetaData(schema=schemaName, bind=engine)
-        meta.reflect(views=True)
+        meta = MetaData(schema=schemaName)
+        meta.reflect(views=True, bind=engine)
 
         try:
             self.tableDef = meta.tables["{}.{}".format(schemaName, tableName)]
