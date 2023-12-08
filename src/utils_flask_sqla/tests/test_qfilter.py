@@ -1,6 +1,6 @@
 import pytest
 from flask import Flask
-from sqlalchemy import func
+from sqlalchemy import func, and_
 
 from flask_sqlalchemy import SQLAlchemy
 
@@ -25,6 +25,10 @@ class BarModel(db.Model):
     def where_pk_query(cls, pk, **kwargs):
         query = kwargs["query"]
         return query.where(BarModel.pk == pk)
+
+    @qfilter
+    def where_pk_list(cls, pk, **kwargs):
+        return and_(*[BarModel.pk == pk])
 
 
 @pytest.fixture(scope="session")
@@ -54,7 +58,7 @@ def bar(app):
 
 
 class TestQfilter:
-    def test_qfilter_returns_whereclause(self, bar):
+    def test_qfilter(self, bar):
         assert db.session.scalars(BarModel.where_pk_query(bar.pk)).one_or_none() is bar
         assert (
             db.session.scalars(db.select(BarModel).where(BarModel.where_pk(bar.pk))).one_or_none()
@@ -67,4 +71,11 @@ class TestQfilter:
                 db.select(BarModel).where(BarModel.where_pk(bar.pk + 1))
             ).one_or_none()
             is not bar
+        )
+
+        assert (
+            db.session.scalars(
+                db.select(BarModel).where(BarModel.where_pk_list(bar.pk))
+            ).one_or_none()
+            is bar
         )
