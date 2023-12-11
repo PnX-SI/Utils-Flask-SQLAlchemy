@@ -19,11 +19,35 @@ class Parent(db.Model):
     col = Column(String)
 
 
+cor_hobby_child = db.Table(
+    "cor_hobby_child",
+    db.Column("id_child", db.Integer, ForeignKey("child.pk")),
+    db.Column("id_hobby", db.Integer, ForeignKey("hobby.pk")),
+)
+
+
+class Hobby(db.Model):
+    __tablename__ = "hobby"
+    pk = Column(Integer, primary_key=True)
+    name = Column(Integer)
+
+
+class Address(db.Model):
+    __tablename__ = "address"
+    pk = Column(Integer, primary_key=True)
+    street = Column(Integer)
+    city = Column(Integer)
+
+
 class Child(db.Model):
+    __tablename__ = "child"
     pk = Column(Integer, primary_key=True)
     col = Column(String)
     parent_pk = Column(Integer, ForeignKey(Parent.pk))
+    address_pk = Column(Integer, ForeignKey(Address.pk))
     parent = relationship("Parent", backref="childs")
+    hobbies = relationship(Hobby, secondary=cor_hobby_child)
+    address = relationship(Address)
 
 
 class ParentSchema(SmartRelationshipsMixin, SQLAlchemyAutoSchema):
@@ -34,18 +58,34 @@ class ParentSchema(SmartRelationshipsMixin, SQLAlchemyAutoSchema):
     childs = Nested("ChildSchema", many=True)
 
 
+class HobbySchema(SQLAlchemyAutoSchema):
+    class Meta:
+        model = Hobby
+
+
+class AdressSchema(SQLAlchemyAutoSchema):
+    class Meta:
+        model = Address
+
+
 class ChildSchema(SmartRelationshipsMixin, SQLAlchemyAutoSchema):
     class Meta:
         model = Child
         include_fk = True
 
     parent = Nested(ParentSchema)
+    hobbies = (
+        auto_field()
+    )  # For a n-n relationship a RelatedList field is created by marshmallow_sqalchemy
+    address = auto_field()
 
 
 class TestSmartRelationshipsMixin:
     def test_only(self):
         parent = Parent(pk=1, col="p")
-        child = Child(pk=1, col="c", parent_pk=1, parent=parent)
+        child = Child(pk=1, col="c", parent_pk=1, address_pk=1, parent=parent)
+        child.hobbies = [Hobby(pk=1, name="Tennis"), Hobby(pk=2, name="petanque")]
+        child.address = Address(pk=1, street="5th avenue", city="New-York")
         parent.childs = [child]
 
         TestCase().assertDictEqual(
@@ -58,20 +98,16 @@ class TestSmartRelationshipsMixin:
 
         TestCase().assertDictEqual(
             ChildSchema().dump(child),
-            {
-                "pk": 1,
-                "col": "c",
-                "parent_pk": 1,
-            },
+            {"pk": 1, "col": "c", "parent_pk": 1, "address_pk": 1},
         )
 
         TestCase().assertDictEqual(
-            ParentSchema(only=["childs"]).dump(parent),
+            ParentSchema(only=["childs", "childs.hobbies"]).dump(parent),
             {
                 "pk": 1,
                 "col": "p",
                 "childs": [
-                    {"pk": 1, "col": "c", "parent_pk": 1},
+                    {"pk": 1, "col": "c", "parent_pk": 1, "address_pk": 1, "hobbies": [1, 2]},
                 ],
             },
         )
@@ -97,6 +133,7 @@ class TestSmartRelationshipsMixin:
                         "pk": 1,
                         "col": "c",
                         "parent_pk": 1,
+                        "address_pk": 1,
                         "parent": {
                             "pk": 1,
                             "col": "p",
@@ -176,12 +213,7 @@ class TestSmartRelationshipsMixin:
 
         TestCase().assertDictEqual(
             ChildSchema(only=("parent",)).dump(child),
-            {
-                "pk": 1,
-                "col": None,
-                "parent_pk": None,
-                "parent": None,
-            },
+            {"pk": 1, "col": None, "parent_pk": None, "parent": None, "address_pk": None},
         )
 
     def test_polymorphic_model(self):
