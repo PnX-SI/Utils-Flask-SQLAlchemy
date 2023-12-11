@@ -1,5 +1,4 @@
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.util.langhelpers import public_factory
 from sqlalchemy.sql.expression import Select
 
 

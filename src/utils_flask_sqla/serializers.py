@@ -10,9 +10,11 @@ from uuid import UUID
 
 from sqlalchemy.orm import ColumnProperty
 from sqlalchemy import inspect
-from sqlalchemy.ext.hybrid import hybrid_property, HYBRID_PROPERTY
+from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.types import DateTime, Date, Time
 from sqlalchemy.dialects.postgresql.base import UUID
+
+HYBRID_PROPERTY = "HYBRID_METHOD"
 
 """
     List of data type who need a particular serialization

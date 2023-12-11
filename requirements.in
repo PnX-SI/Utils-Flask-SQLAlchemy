@@ -3,4 +3,4 @@ flask-sqlalchemy
 flask-migrate
 marshmallow
 python-dateutil
-sqlalchemy<2
+sqlalchemy

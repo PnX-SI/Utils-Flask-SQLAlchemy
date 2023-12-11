@@ -52,7 +52,7 @@ def box_drowing(up, down, left, right, bold=True):
 @click.option("--json", "json_output", is_flag=True, help="Output commands results as JSON.")
 @with_appcontext
 def exec(command, commit, json_output):
-    db = current_app.extensions["sqlalchemy"].db
+    db = current_app.extensions["sqlalchemy"].engine
     results = []
     for cmd in command:
         results.append(db.session.execute(cmd))
@@ -86,12 +86,12 @@ def exec(command, commit, json_output):
 @with_appcontext
 def autoupgrade(directory, sql, tag, x_arg):
     """Upgrade all branches to head."""
-    db = current_app.extensions["sqlalchemy"].db
+    session = current_app.extensions["sqlalchemy"].session
     migrate = current_app.extensions["migrate"].migrate
     config = migrate.get_config(directory, x_arg)
     script = ScriptDirectory.from_config(config)
     heads = set(script.get_heads())
-    migration_context = MigrationContext.configure(db.session.connection())
+    migration_context = MigrationContext.configure(session.connection())
     current_heads = migration_context.get_current_heads()
     # get_current_heads does not return implicit revision through dependecies, get_all_current does
     current_heads = set(map(lambda rev: rev.revision, script.get_all_current(current_heads)))
