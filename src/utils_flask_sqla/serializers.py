@@ -400,7 +400,7 @@ def get_serializable_decorator(fields=[], exclude=[], stringify=True):
                 # preload with id
                 # pour faire une seule requête
                 ids = filter(lambda x: x, map(lambda x: x.get(id_field_name), values))
-                preload_res_with_ids = Model.query.filter(
+                preload_res_with_ids = Model.query.where(
                     getattr(Model, id_field_name).in_(ids)
                 ).all()
 

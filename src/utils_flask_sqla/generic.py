@@ -51,23 +51,23 @@ def test_type_and_generate_query(param_name, value, model, q):
     sql_type = col.type
     if sql_type == Integer or isinstance(sql_type, (Integer)):
         try:
-            return q.filter(col == int(value))
+            return q.where(col == int(value))
         except Exception as e:
             raise UtilsSqlaError("{0} must be an integer".format(param_name))
     if sql_type == Numeric or isinstance(sql_type, (Numeric)):
         try:
-            return q.filter(col == float(value))
+            return q.where(col == float(value))
         except Exception as e:
             raise UtilsSqlaError("{0} must be an float (decimal separator .)".format(param_name))
     if sql_type == DateTime or isinstance(sql_type, (Date, DateTime)):
         try:
-            return q.filter(col == parser.parse(value))
+            return q.where(col == parser.parse(value))
         except Exception as e:
             raise UtilsSqlaError("{0} must be an date (yyyy-mm-dd)".format(param_name))
 
     if sql_type == Boolean or isinstance(sql_type, Boolean):
         try:
-            return q.filter(col.is_(bool(value)))
+            return q.where(col.is_(bool(value)))
         except Exception:
             raise UtilsSqlaError("{0} must be a boolean".format(param_name))
 
@@ -188,12 +188,12 @@ class GenericQuery:
 
     def build_query_filter(self, query, param_name, param_value):
         if param_name in self.view.tableDef.columns.keys():
-            query = query.filter(self.view.tableDef.columns[param_name] == param_value)
+            query = query.where(self.view.tableDef.columns[param_name] == param_value)
 
         if param_name.startswith("ilike_"):
             col = self.view.tableDef.columns[param_name[6:]]
             if col.type.__class__.__name__ == "TEXT":
-                query = query.filter(col.ilike("%{}%".format(param_value)))
+                query = query.where(col.ilike("%{}%".format(param_value)))
 
         if param_name.startswith("filter_d_"):
             col = self.view.tableDef.columns[param_name[12:]]
@@ -205,11 +205,11 @@ class GenericQuery:
                 raise UtilsSqlaError(message=test_type)
             if col_type in ("Date", "DateTime", "TIMESTAMP", "INTEGER"):
                 if param_name.startswith("filter_d_up_"):
-                    query = query.filter(col >= param_value)
+                    query = query.where(col >= param_value)
                 if param_name.startswith("filter_d_lo_"):
-                    query = query.filter(col <= param_value)
+                    query = query.where(col <= param_value)
                 if param_name.startswith("filter_d_eq_"):
-                    query = query.filter(col == param_value)
+                    query = query.where(col == param_value)
 
         if param_name.startswith("filter_n_"):
             col = self.view.tableDef.columns[param_name[12:]]
@@ -218,9 +218,9 @@ class GenericQuery:
             if test_type:
                 raise UtilsSqlaError(message=test_type)
             if param_name.startswith("filter_n_up_"):
-                query = query.filter(col >= param_value)
+                query = query.where(col >= param_value)
             if param_name.startswith("filter_n_lo_"):
-                query = query.filter(col <= param_value)
+                query = query.where(col <= param_value)
         return query
 
     def build_query_order(self, query, parameters):
