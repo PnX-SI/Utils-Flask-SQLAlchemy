@@ -43,7 +43,7 @@ def is_already_joined(my_class, query):
     query: SQLAlchemy query
     return boolean
     """
-    for visitor in visitors.iterate(query.statement):
+    for visitor in visitors.iterate(query):
         # Checking for `.join(Parent.child)` clauses
         if visitor.__visit_name__ == "binary":
             for vis in visitors.iterate(visitor):

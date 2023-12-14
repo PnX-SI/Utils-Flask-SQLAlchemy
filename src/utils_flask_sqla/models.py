@@ -1,6 +1,6 @@
 from sqlalchemy.sql.expression import BooleanClauseList, BinaryExpression
 from flask_sqlalchemy.model import DefaultMeta
-from sqlalchemy.sql import select, Select
+from sqlalchemy.sql import select, Select, CompoundSelect
 
 AUTHORIZED_WHERECLAUSE_TYPES = [bool, BooleanClauseList, BinaryExpression]
 
@@ -86,7 +86,7 @@ def _qfilter(query=False):
                 kwargs["query"] = query
             result = method(*args, **kwargs)
 
-            if is_query and not isinstance(result, Select):
+            if is_query and not (isinstance(result, Select) or isinstance(result, CompoundSelect)):
                 raise ValueError("Your method must return a SQLAlchemy Select object ")
 
             if not is_query and not is_whereclause_compatible(result):
