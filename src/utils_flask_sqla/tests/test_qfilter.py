@@ -1,6 +1,6 @@
 import pytest
 from flask import Flask
-from sqlalchemy import func, and_
+from sqlalchemy import func, and_, select
 
 from flask_sqlalchemy import SQLAlchemy
 
@@ -61,21 +61,19 @@ class TestQfilter:
     def test_qfilter(self, bar):
         assert db.session.scalars(BarModel.where_pk_query(bar.pk)).one_or_none() is bar
         assert (
-            db.session.scalars(db.select(BarModel).where(BarModel.where_pk(bar.pk))).one_or_none()
+            db.session.scalars(select(BarModel).where(BarModel.where_pk(bar.pk))).one_or_none()
             is bar
         )
 
         assert db.session.scalars(BarModel.where_pk_query(bar.pk + 1)).one_or_none() is not bar
         assert (
-            db.session.scalars(
-                db.select(BarModel).where(BarModel.where_pk(bar.pk + 1))
-            ).one_or_none()
+            db.session.scalars(select(BarModel).where(BarModel.where_pk(bar.pk + 1))).one_or_none()
             is not bar
         )
 
         assert (
             db.session.scalars(
-                db.select(BarModel).where(BarModel.where_pk_list(bar.pk))
+                select(BarModel).where(BarModel.where_pk_list(bar.pk))
             ).one_or_none()
             is bar
         )
