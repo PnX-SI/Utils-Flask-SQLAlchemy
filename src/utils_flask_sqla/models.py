@@ -28,7 +28,7 @@ def qfilter(*args_dec, **kwargs_dec):
                 filters = []
                 if "id_station" in kwargs:
                     filters.append(Station.id_station == kwargs["id_station"])
-                return filters
+                return sa.and_(*filters)
             # If you wish the method to return a query
             @qfilter(query=True)
             def filter_by_paramsQ(cls,**kwargs):
