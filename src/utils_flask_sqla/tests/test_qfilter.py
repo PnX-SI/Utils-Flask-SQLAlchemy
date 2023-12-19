@@ -28,7 +28,7 @@ class BarModel(db.Model):
 
     @qfilter
     def where_pk_list(cls, pk, **kwargs):
-        return and_(*[BarModel.pk == pk])
+        return BarModel.pk == pk
 
 
 @pytest.fixture(scope="session")
