@@ -1,6 +1,7 @@
 """
   Serialize function for SQLAlchemy models
 """
+
 from inspect import signature, getattr_static
 from warnings import warn
 from collections import defaultdict, ChainMap
