@@ -2,12 +2,17 @@
 CHANGELOG
 =========
 
-0.3.7 (unreleased)
+0.4.0 (unreleased)
 ------------------
 
 **🐛 Corrections**
 
-* 
+- Mise à jour de Flask version 2 à 3 (#46)
+- Mise à jour de SQLAlchemy version 1.3 à 1.4 (#46)
+- Abandon du support de Debian 10 (#46)
+- Abandon du support de Python 3.7 (#46)
+- Refactorisation du SmartRelationshipsMixin par défaut (via ``only``) des fields de type ``RelatedList`` et ``Related`` utilisé par ``marshmallow_sqlalchemy`` lorsqu'on utilise la propriété ``include_relationships=True`` ou qu'on charge le champs via ``auto_field`` (#47)
+
 
 0.3.6 (2023-09-14)
 ------------------
