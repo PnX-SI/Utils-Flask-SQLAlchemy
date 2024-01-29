@@ -72,4 +72,5 @@ class SmartRelationshipsMixin:
             kwargs["only"] = only
         if exclude:
             kwargs["exclude"] = exclude
+            self.opts.exclude = set(self.opts.exclude) - set(firstlevel_only)
         super().__init__(*args, **kwargs)
