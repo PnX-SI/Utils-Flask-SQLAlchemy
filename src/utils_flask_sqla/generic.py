@@ -240,11 +240,10 @@ class GenericQuery:
     def set_limit(self, q):
         return q.limit(self.limit).offset(self.offset * self.limit)
 
-    def raw_query(self, process_filter=True, with_limit=True):
+    def raw_query(self, process_filter=True):
         """
         Renvoie la requete 'brute' (sans .all)
         - process_filter: application des filtres (et du sort)
-        - with_limit: application de la limite sur la query
         """
 
         q = self.DB.session.query(self.view.tableDef)
@@ -255,7 +254,7 @@ class GenericQuery:
             unordered_q = self.build_query_filters(q, self.filters)
             q = self.build_query_order(unordered_q, self.filters)
 
-        if self.limit != -1 and with_limit:
+        if self.limit != -1:
             q = self.set_limit(q)
 
         return q
@@ -267,10 +266,10 @@ class GenericQuery:
         q = self.DB.session.query(self.view.tableDef)
         nb_result_without_filter = q.count()
 
-        q = self.raw_query(process_filter=True, with_limit=False)
+        q = self.raw_query(process_filter=True)
         total_filtered = q.count() if self.filters else nb_result_without_filter
 
-        data = self.set_limit(q).all()
+        data = q.all()
 
         return data, nb_result_without_filter, total_filtered
 
