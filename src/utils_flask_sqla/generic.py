@@ -164,11 +164,11 @@ class GenericQuery:
     def __init__(
         self,
         DB,
-        tableName:str,
-        schemaName:str,
-        filters:list=[],
-        limit:int=None,
-        offset:int=0,
+        tableName: str,
+        schemaName: str,
+        filters: list = [],
+        limit: int = None,
+        offset: int = 0,
     ):
         self.DB = DB
         self.tableName = tableName
