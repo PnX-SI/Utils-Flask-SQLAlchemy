@@ -164,16 +164,18 @@ class GenericQuery:
     def __init__(
         self,
         DB,
-        tableName,
-        schemaName,
-        filters=[],
-        limit=100,
-        offset=0,
+        tableName:str,
+        schemaName:str,
+        filters:list=[],
+        limit:int=None,
+        offset:int=0,
     ):
         self.DB = DB
         self.tableName = tableName
         self.schemaName = schemaName
         self.filters = filters
+        if limit:
+            assert limit > 0
         self.limit = limit
         self.offset = offset
         self.view = GenericTable(tableName, schemaName, DB.engine)
@@ -254,7 +256,7 @@ class GenericQuery:
             unordered_q = self.build_query_filters(q, self.filters)
             q = self.build_query_order(unordered_q, self.filters)
 
-        if self.limit != -1:
+        if self.limit:
             q = self.set_limit(q)
 
         return q
