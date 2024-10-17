@@ -216,6 +216,17 @@ class TestSmartRelationshipsMixin:
             {"pk": 1, "col": None, "parent_pk": None, "parent": None, "address_pk": None},
         )
 
+    def test_no_firstlevel_fields(self):
+        child = Child(pk=1)
+        parent = Parent(pk=1, childs=[child])
+
+        TestCase().assertDictEqual(
+            ParentSchema(only=("-", "childs.pk")).dump(parent),
+            {
+                "childs": [{"pk": 1}],
+            },
+        )
+
     def test_polymorphic_model(self):
         class PolyModel(db.Model):
             __mapper_args__ = {
