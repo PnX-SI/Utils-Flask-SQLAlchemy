@@ -1,5 +1,5 @@
 """
-  Serialize function for SQLAlchemy models
+Serialize function for SQLAlchemy models
 """
 
 from inspect import signature, getattr_static
