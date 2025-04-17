@@ -97,6 +97,10 @@ def temporary_function_transaction(request):
     # This is particularly important to test raiseload loading strategy.
     _session.expire_all()
 
+    # Ensure an empty session cache before each test
+    # This is particularly important to test raiseload loading strategy.
+    _session.expire_all()
+
     outer_transaction = _session.begin_nested()
     inner_transaction = _session.begin_nested()
 
