@@ -29,7 +29,7 @@ def get_column_from_path(select, model, path, *, join=False):
         return select, col
 
 
-def ordered(select, model, *, order_by=None, join=False):
+def ordered(select, model, *, order_by=None, join=False, arg_name="sort"):
     """
     User can order the select query through 'sort' query parameter.
     Several order criterias can be applied separating them with commas.
@@ -41,7 +41,7 @@ def ordered(select, model, *, order_by=None, join=False):
     The order_by argument allow to specify a default ordering if no order is requested
     in the query.
     """
-    sort = request.args.get("sort")
+    sort = request.args.get(arg_name)
     if sort:
         order_by = []
         sort = sort.split(",")

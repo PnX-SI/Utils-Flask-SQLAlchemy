@@ -103,6 +103,21 @@ class TestOrdered:
             for o1, o2 in pairwise(results):
                 assert o1.pk > o2.pk
 
+    def test_ordered_column_arg_name(self, app):
+        query = sa.select(Parent)
+
+        with app.test_request_context("?orderby=pk"):
+            stmt = ordered(query, Parent, arg_name="orderby")
+            results = db.session.execute(stmt).scalars()
+            for o1, o2 in pairwise(results):
+                assert o1.pk < o2.pk
+
+        with app.test_request_context("?orderby=-pk"):
+            stmt = ordered(query, Parent, arg_name="orderby")
+            results = db.session.execute(stmt).scalars()
+            for o1, o2 in pairwise(results):
+                assert o1.pk > o2.pk
+
     def test_ordered_relationship_not_joined(self, app):
         query = sa.select(Child)
 
