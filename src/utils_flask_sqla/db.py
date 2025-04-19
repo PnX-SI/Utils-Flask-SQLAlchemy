@@ -29,7 +29,7 @@ def get_column_from_path(select, model, path, *, join=False):
         return select, col
 
 
-def ordered(select, model, *, order_by=None, join=False, arg_name="sort"):
+def ordered(select, model, *, order_by=None, join=False, arg_name="sort", reset=False):
     """
     User can order the select query through 'sort' query parameter.
     Several order criterias can be applied separating them with commas.
@@ -40,6 +40,7 @@ def ordered(select, model, *, order_by=None, join=False, arg_name="sort"):
     of the query, a BadRequest is raised.
     The order_by argument allow to specify a default ordering if no order is requested
     in the query.
+    If reset=True, existing order by criterias are cancelled before applying those of users.
     """
     sort = request.args.get(arg_name)
     if sort:
@@ -63,6 +64,8 @@ def ordered(select, model, *, order_by=None, join=False, arg_name="sort"):
                 col = col.asc()
 
             order_by.append(col)
+        if reset:
+            select = select.order_by(None)
         return select.order_by(*order_by)
     elif order_by is not None:
         if isinstance(order_by, list) or isinstance(order_by, tuple):
