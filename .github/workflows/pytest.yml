@@ -16,7 +16,7 @@ jobs:
 
     strategy:
       matrix:
-        python-version: [ '3.9', '3.11' ]
+        python-version: [ '3.9', '3.11', '3.13' ]
         sqlalchemy-version: [ '1.4' ]
         include:
           - sqlalchemy-version: '1.4'
