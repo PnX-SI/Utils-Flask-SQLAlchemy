@@ -65,3 +65,12 @@ def is_already_joined(my_class, query):
                 if my_class.__table__.fullname == visitor.table.fullname:
                     return True
     return False
+
+
+def strtobool(s: str):
+    s = s.lower()
+    if s in ("y", "yes", "t", "true", "on", "1"):
+        return True
+    if s in ("n", "no", "f", "false", "off", "0"):
+        return False
+    raise ValueError(f"can not convert '{s}' to bool")
