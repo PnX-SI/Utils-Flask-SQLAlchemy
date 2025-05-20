@@ -11,7 +11,7 @@
 **🐛 Corrections**
 
 - [GenericQuery] Correction de la prise en compte du paramètre `limit` (#51 par @JulienCorny)
-- [GenericQuery] Une erreur 400 est levée quand une colonne déclarée n'existe pas (#45 par @TheoLechemia)
+- [GenericQuery] Une erreur 400 est levée quand une colonne utilisée pour trier les données n'existe pas (#45 par @TheoLechemia)
 
 ## 0.4.1 (2024-01-29)
 
