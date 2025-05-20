@@ -5,6 +5,7 @@
 **🚀 Nouveautés**
 
 - Ajout de la possibilité de récupérer uniquement les `NestedField` avec la valeur `"-"` dans le paramètre `only` d'un schéma qui hérite de la classe `SmartRelationshipsMixin` (#54 par @bouttier)
+- Ajout du support de Python 3.13 (#57 par @bouttier)
 
 **🐛 Corrections**
 
