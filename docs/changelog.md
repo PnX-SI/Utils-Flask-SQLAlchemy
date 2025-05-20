@@ -5,11 +5,13 @@
 **🚀 Nouveautés**
 
 - Ajout de la possibilité de récupérer uniquement les `NestedField` avec la valeur `"-"` dans le paramètre `only` d'un schéma qui hérite de la classe `SmartRelationshipsMixin` (#54 par @bouttier)
+- Ajout de la méthode `ordered` (#56 par @bouttier)
 - Ajout du support de Python 3.13 (#57 par @bouttier)
 
 **🐛 Corrections**
 
-- Correction de la prise en compte du paramètre `limit` de la classe `GenericQuery` (#51 par @JulienCorny)
+- [GenericQuery] Correction de la prise en compte du paramètre `limit` (#51 par @JulienCorny)
+- [GenericQuery] Une erreur 400 est levée quand une colonne déclarée n'existe pas (#45 par @TheoLechemia)
 
 ## 0.4.1 (2024-01-29)
 
