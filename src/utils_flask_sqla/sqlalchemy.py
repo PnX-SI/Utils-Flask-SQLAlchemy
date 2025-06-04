@@ -13,7 +13,8 @@ class AugmentedSQLAlchemy(SQLAlchemy):
         max_per_page=None,
         error_out=True,
         count=True,
-        scalars=False
+        scalars=False,
+        unique=False,
     ):
         return AugmentedSelectedPagination(
             select=select,
@@ -24,4 +25,5 @@ class AugmentedSQLAlchemy(SQLAlchemy):
             error_out=error_out,
             count=count,
             scalars=scalars,
+            unique=unique,
         )
