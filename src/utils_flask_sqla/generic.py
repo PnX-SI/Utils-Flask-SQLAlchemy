@@ -1,14 +1,16 @@
 from itertools import chain
 from warnings import warn
 
+import sqlalchemy as sa
 from dateutil import parser
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import MetaData
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.types import Boolean, Date, DateTime, Integer, Numeric
 from werkzeug.exceptions import BadRequest
 
 from .errors import UtilsSqlaError
+
+from utils_flask_sqla.env import db
 
 
 def testDataType(value, sqlType, paramName):
@@ -102,11 +104,18 @@ class GenericTable:
             - engine : sqlalchemy instance engine
                 for exemple : DB.engine if DB = Sqlalchemy()
         """
-        meta = MetaData(schema=schemaName)
-        meta.reflect(views=True, bind=engine)
 
         try:
-            self.tableDef = meta.tables["{}.{}".format(schemaName, tableName)]
+
+            conn = db.engine.connect()
+
+            metadata = sa.MetaData(bind=conn)
+            self.tableDef = sa.Table(
+                tableName,
+                metadata,
+                schema=schemaName,
+                autoload_with=conn,
+            )
         except KeyError:
             raise KeyError("table {}.{} doesn't exists".format(schemaName, tableName))
 
