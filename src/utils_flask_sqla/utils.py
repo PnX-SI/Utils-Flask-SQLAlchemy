@@ -7,6 +7,7 @@ from shutil import copyfileobj
 from urllib.request import urlopen
 from contextlib import suppress
 from sqlalchemy.sql import visitors
+from sqlalchemy.dialects import postgresql
 
 
 class remote_file(ExitStack):
@@ -74,3 +75,23 @@ def strtobool(s: str):
     if s in ("n", "no", "f", "false", "off", "0"):
         return False
     raise ValueError(f"can not convert '{s}' to bool")
+
+
+def get_query_SQL(query):
+    """
+    Return the SQL produced by SQLAlchemy with the given query
+
+    Parameters
+    ----------
+    query : Select or Query
+        SQLAlchemy query
+
+    Returns
+    -------
+    str
+        SQL query generated
+    """
+    return query.compile(
+        dialect=postgresql.dialect(),
+        compile_kwargs={"literal_binds": True},
+    )
