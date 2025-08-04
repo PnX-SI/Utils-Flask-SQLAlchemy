@@ -8,9 +8,10 @@ from collections import defaultdict, ChainMap
 from itertools import chain
 from functools import lru_cache
 from uuid import UUID
+from flask import current_app
 
 from sqlalchemy.orm import ColumnProperty
-from sqlalchemy import inspect
+from sqlalchemy import inspect, select
 from sqlalchemy.ext.hybrid import hybrid_property, HYBRID_PROPERTY
 from sqlalchemy.types import DateTime, Date, Time
 from sqlalchemy.dialects.postgresql.base import UUID
@@ -355,7 +356,7 @@ def get_serializable_decorator(fields=[], exclude=[], stringify=True):
                 recursif: si on renseigne les relationships
 
             """
-
+            db = current_app.extensions["sqlalchemy"]
             cls_db_columns_key = list(map(lambda x: x[0], get_cls_db_columns()))
 
             # populate cls_db_columns
@@ -400,10 +401,11 @@ def get_serializable_decorator(fields=[], exclude=[], stringify=True):
 
                 # preload with id
                 # pour faire une seule requête
-                ids = filter(lambda x: x, map(lambda x: x.get(id_field_name), values))
-                preload_res_with_ids = Model.query.where(
-                    getattr(Model, id_field_name).in_(ids)
-                ).all()
+                ids = set(filter(lambda x: x, map(lambda x: x.get(id_field_name), values)))
+
+                stmt = select(Model).where(getattr(Model, id_field_name).in_(ids))
+
+                preload_res_with_ids = db.session.execute(stmt).scalars().all()
 
                 # resul
                 v_obj = []
@@ -411,16 +413,18 @@ def get_serializable_decorator(fields=[], exclude=[], stringify=True):
                 for data in values:
                     id_value = data.pop(id_field_name, None)
 
+                    # On filtre la liste des objets préchargés
+                    filtered_results = list(
+                        filter(
+                            lambda x: getattr(x, id_field_name) == id_value,
+                            preload_res_with_ids,
+                        )
+                    )
+
                     res = (
-                        # si on a une id -> on recupère dans la liste preload_res_with_ids
-                        # TODO trouver un find plus propre ?
-                        list(
-                            filter(
-                                lambda x: getattr(x, id_field_name) == id_value,
-                                preload_res_with_ids,
-                            )
-                        )[0]
-                        if id_value and len(preload_res_with_ids)
+                        # si on a une id et qu'on a trouvé au moins un résultat
+                        filtered_results[0]
+                        if id_value and filtered_results
                         # sinon on cree une nouvelle instance
                         else Model()
                     )
