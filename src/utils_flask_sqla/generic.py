@@ -4,6 +4,7 @@ from warnings import warn
 import sqlalchemy as sa
 from dateutil import parser
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import MetaData, inspect
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.types import Boolean, Date, DateTime, Integer, Numeric
 from werkzeug.exceptions import BadRequest
@@ -104,17 +105,46 @@ class GenericTable:
             - engine : sqlalchemy instance engine
                 for exemple : DB.engine if DB = Sqlalchemy()
         """
+        # En sqlalchemy 2.0, il faut utiliser MetaData()
+        meta = MetaData()
 
+        # Try to reflect just the specific table instead of all tables
         try:
-            with db.engine.connect() as conn:
-                self.tableDef = sa.Table(
-                    tableName,
-                    db.metadata,
-                    schema=schemaName,
-                    autoload_with=conn,
-                )
-        except KeyError:
-            raise KeyError("Table {}.{} doesn't exists".format(schemaName, tableName))
+
+            meta.reflect(only=[tableName], schema=schemaName, views=True, bind=engine)
+            table_key = f"{schemaName}.{tableName}"
+
+            if table_key in meta.tables:
+                self.tableDef = meta.tables[table_key]
+            # If not found with schema, try without schema
+            elif tableName in meta.tables:
+                self.tableDef = meta.tables[tableName]
+            else:
+                # Si on ne trouve pas la table, en essaye de la trouver dans le schema et les vues
+
+                inspector = inspect(engine)
+                available_views = inspector.get_view_names(schema=schemaName)
+                available_tables = inspector.get_table_names(schema=schemaName)
+                if tableName in available_views or tableName in available_tables:
+                    # Force reflection with explicit view flag
+                    meta = MetaData()
+                    meta.reflect(
+                        only=[tableName],
+                        schema=schemaName,
+                        views=True,
+                        bind=engine,
+                        extend_existing=True,
+                    )
+                    table_key = f"{schemaName}.{tableName}"
+                    if table_key in meta.tables:
+                        self.tableDef = meta.tables[table_key]
+                    else:
+                        raise KeyError(f"table {schemaName}.{tableName} doesn't exist")
+                else:
+                    raise KeyError(f"table {schemaName}.{tableName} doesn't exist")
+        except Exception as e:
+            # If any error occurs, provide a detailed error message
+            raise KeyError(f"Error accessing table {schemaName}.{tableName}: {str(e)}")
 
         # Mise en place d'un mapping des colonnes en vue d'une sérialisation
         self.serialize_columns, self.db_cols = self.get_serialized_columns()
@@ -256,8 +286,8 @@ class GenericQuery:
         Renvoie la requete 'brute' (sans .all)
         - process_filter: application des filtres (et du sort)
         """
-
-        q = self.DB.session.query(self.view.tableDef)
+        # Use select() instead of query()
+        q = self.DB.select(self.view.tableDef)
 
         if not process_filter:
             return q
@@ -274,13 +304,24 @@ class GenericQuery:
         """
         Lance la requete et retourne l'objet sqlalchemy
         """
-        q = self.DB.session.query(self.view.tableDef)
-        nb_result_without_filter = q.count()
+        # Use select() instead of query()
+        nb_result_without_filter = self.DB.session.scalar(
+            self.DB.select(self.DB.func.count()).select_from(self.view.tableDef)
+        )
 
+        # Get filtered query using raw_query
         q = self.raw_query(process_filter=True)
         total_filtered = q.limit(None).count() if self.filters else nb_result_without_filter
 
-        data = q.all()
+        # Calculate total filtered rows
+        if self.filters:
+            count_stmt = self.DB.select(self.DB.func.count()).select_from(q.subquery())
+            total_filtered = self.DB.session.scalar(count_stmt)
+        else:
+            total_filtered = nb_result_without_filter
+
+        # Execute query
+        data = self.DB.session.execute(q).all()
 
         return data, nb_result_without_filter, total_filtered
 
