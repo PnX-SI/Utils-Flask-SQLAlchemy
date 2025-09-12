@@ -272,7 +272,7 @@ class GenericQuery:
         nb_result_without_filter = q.count()
 
         q = self.raw_query(process_filter=True)
-        total_filtered = q.count() if self.filters else nb_result_without_filter
+        total_filtered = q.limit(None).count() if self.filters else nb_result_without_filter
 
         data = q.all()
 
