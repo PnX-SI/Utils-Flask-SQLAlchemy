@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 0.4.3 (unreleased)
+
+**🐛 Corrections**
+
+- Correction de la valeur erronée de la propriété `total_filtered` (régression de la version 0.4, #62)
+
 ## 0.4.2 (2025-05-20)
 
 **🚀 Nouveautés**
