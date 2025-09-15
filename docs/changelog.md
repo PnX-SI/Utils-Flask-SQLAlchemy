@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## 0.4.3 (unreleased)
+## 0.4.3 (2025-09-15)
 
 **🐛 Corrections**
 
