@@ -6,7 +6,6 @@ from flask_sqlalchemy import SQLAlchemy
 
 from utils_flask_sqla.models import qfilter
 
-
 db = SQLAlchemy()
 
 

@@ -1,7 +1,6 @@
 import pytest
 from sqlalchemy.event import listen, remove
 
-
 """
 We open a nested transaction at each scope, and this nested transaction is rollback at teardown,
 removing all db changes introduced by fixtures at this level.

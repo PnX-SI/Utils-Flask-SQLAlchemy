@@ -1,7 +1,6 @@
 from flask import request
 from werkzeug.exceptions import BadRequest
 
-
 __all__ = ["ordered"]
 
 

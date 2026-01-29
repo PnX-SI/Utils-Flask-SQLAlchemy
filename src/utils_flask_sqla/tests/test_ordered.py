@@ -24,7 +24,6 @@ from werkzeug.exceptions import BadRequest
 
 from utils_flask_sqla.db import ordered
 
-
 db = SQLAlchemy()
 
 

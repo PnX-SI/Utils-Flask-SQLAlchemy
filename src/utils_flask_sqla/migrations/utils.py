@@ -9,7 +9,6 @@ import os, os.path
 
 from ..utils import remote_file
 
-
 logger = logging.getLogger("alembic.runtime.migration")
 
 """

@@ -14,7 +14,6 @@ from geoalchemy2 import Geometry
 
 from utils_flask_sqla.serializers import serializable
 
-
 db = SQLAlchemy()
 
 
