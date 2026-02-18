@@ -1,4 +1,9 @@
 # CHANGELOG
+## 0.4.5 (2026-02-18)
+
+**🐛 Corrections**
+
+- Fermeture de la connexion à la base de données après la récupération des méta-données dans `GenericTable`(#68 par @jacquesfize)
 
 ## 0.4.4 (2026-02-18)
 
