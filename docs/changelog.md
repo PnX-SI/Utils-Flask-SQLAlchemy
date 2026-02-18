@@ -2,7 +2,10 @@
 
 ## 0.4.4 (2026-02-18)
 
+**🚀 Nouveautés** 
+
 - Application de [Black 26](https://github.com/psf/black/releases/tag/26.1.0)
+- Récupération de l'objet SQLAlchemy déclaré dans la variable d'environnement `FLASK_SQLALCHEMY_DB` (#61 par @TheoLechemia et @amandine-sahl)
 
 ## 0.4.3 (2025-09-15)
 
