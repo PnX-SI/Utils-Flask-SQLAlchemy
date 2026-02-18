@@ -3,10 +3,12 @@ from warnings import warn
 
 from dateutil import parser
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import select, func
 from sqlalchemy import MetaData
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.types import Boolean, Date, DateTime, Integer, Numeric
 from werkzeug.exceptions import BadRequest
+from utils_flask_sqla.paginate import paginate
 
 from .errors import UtilsSqlaError
 
@@ -169,7 +171,7 @@ class GenericQuery:
         schemaName: str,
         filters: list = [],
         limit: int = None,
-        offset: int = 0,
+        page: int = 1,
     ):
         self.DB = DB
         self.tableName = tableName
@@ -178,7 +180,7 @@ class GenericQuery:
         if limit:
             assert limit > 0
         self.limit = limit
-        self.offset = offset
+        self.page = page
         self.view = GenericTable(tableName, schemaName, DB.engine)
 
     def build_query_filters(self, query, parameters):
@@ -243,7 +245,7 @@ class GenericQuery:
         return query
 
     def set_limit(self, q):
-        return q.limit(self.limit).offset(self.offset * self.limit)
+        return q.limit(self.limit).offset(self.page * self.limit)
 
     def raw_query(self, process_filter=True):
         """
@@ -251,31 +253,35 @@ class GenericQuery:
         - process_filter: application des filtres (et du sort)
         """
 
-        q = self.DB.session.query(self.view.tableDef)
+        query = select(self.view.tableDef)
 
         if not process_filter:
-            return q
+            return query
         if self.filters:
-            unordered_q = self.build_query_filters(q, self.filters)
-            q = self.build_query_order(unordered_q, self.filters)
+            unordered_q = self.build_query_filters(query, self.filters)
+            query = self.build_query_order(unordered_q, self.filters)
 
-        if self.limit:
-            q = self.set_limit(q)
-
-        return q
+        return query
 
     def query(self):
         """
         Lance la requete et retourne l'objet sqlalchemy
         """
-        q = self.DB.session.query(self.view.tableDef)
-        nb_result_without_filter = q.count()
+        nb_result_without_filter = self.DB.session.query(self.view.tableDef).count()
 
-        q = self.raw_query(process_filter=True)
-        total_filtered = q.limit(None).count() if self.filters else nb_result_without_filter
+        query = self.raw_query(process_filter=True)
+        if self.limit:
+            print(query._raw_columns)
+            pagination = paginate(self.DB.session, query, page=self.page, per_page=self.limit)
+            return pagination.items, nb_result_without_filter, pagination.total
 
-        data = q.all()
+        total_filtered = (
+            select(func.count("*").select_from(query.subquery()))
+            if self.filters
+            else nb_result_without_filter
+        )
 
+        data = self.DB.session.execute(query).all()
         return data, nb_result_without_filter, total_filtered
 
     def return_query(self):
@@ -292,7 +298,7 @@ class GenericQuery:
         return {
             "total": nb_result_without_filter,
             "total_filtered": nb_results,
-            "page": self.offset,
+            "page": self.page,
             "limit": self.limit,
             "items": results,
         }
