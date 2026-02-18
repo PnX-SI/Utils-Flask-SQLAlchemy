@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 0.4.4 (2026-02-18)
+
+- Application de [Black 26](https://github.com/psf/black/releases/tag/26.1.0)
+
 ## 0.4.3 (2025-09-15)
 
 **🐛 Corrections**
