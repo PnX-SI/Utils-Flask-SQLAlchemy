@@ -1,7 +1,6 @@
 from os import environ
 from importlib import import_module
 
-
 db_path = environ.get("FLASK_SQLALCHEMY_DB")
 if not db_path:
     raise Exception("FLASK_SQLALCHEMY_DB env var is missing")
