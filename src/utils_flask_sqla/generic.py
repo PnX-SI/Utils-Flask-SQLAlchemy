@@ -106,18 +106,16 @@ class GenericTable:
         """
 
         try:
-
-            conn = db.engine.connect()
-
-            metadata = sa.MetaData(bind=conn)
-            self.tableDef = sa.Table(
-                tableName,
-                metadata,
-                schema=schemaName,
-                autoload_with=conn,
-            )
+            with db.engine.connect() as conn:
+                metadata = sa.MetaData(bind=conn)
+                self.tableDef = sa.Table(
+                    tableName,
+                    metadata,
+                    schema=schemaName,
+                    autoload_with=conn,
+                )
         except KeyError:
-            raise KeyError("table {}.{} doesn't exists".format(schemaName, tableName))
+            raise KeyError("Table {}.{} doesn't exists".format(schemaName, tableName))
 
         # Mise en place d'un mapping des colonnes en vue d'une sérialisation
         self.serialize_columns, self.db_cols = self.get_serialized_columns()
