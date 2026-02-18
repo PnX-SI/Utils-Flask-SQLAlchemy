@@ -52,7 +52,7 @@ def box_drowing(up, down, left, right, bold=True):
 @click.option("--json", "json_output", is_flag=True, help="Output commands results as JSON.")
 @with_appcontext
 def exec(command, commit, json_output):
-    db = current_app.extensions["sqlalchemy"].db
+    db = current_app.extensions["sqlalchemy"]
     results = []
     for cmd in command:
         results.append(db.session.execute(cmd))
@@ -86,7 +86,7 @@ def exec(command, commit, json_output):
 @with_appcontext
 def autoupgrade(directory, sql, tag, x_arg):
     """Upgrade all branches to head."""
-    db = current_app.extensions["sqlalchemy"].db
+    db = current_app.extensions["sqlalchemy"]
     migrate = current_app.extensions["migrate"].migrate
     config = migrate.get_config(directory, x_arg)
     script = ScriptDirectory.from_config(config)
@@ -117,7 +117,8 @@ def autoupgrade(directory, sql, tag, x_arg):
 @with_appcontext
 def status(directory, x_arg, show_dependencies, branches):
     """Show all revisions sorted by branches."""
-    db = current_app.extensions["sqlalchemy"].db
+    db = current_app.extensions["sqlalchemy"]
+
     migrate = current_app.extensions["migrate"].migrate
 
     config = migrate.get_config(directory, x_arg)
