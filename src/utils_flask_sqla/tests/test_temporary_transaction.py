@@ -3,23 +3,7 @@ from tempfile import NamedTemporaryFile
 import pytest
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.orm import sessionmaker
-
-Session = sessionmaker()
-
-from flask_sqlalchemy.session import Session as FSASession
-
-
-class TestSession(FSASession):
-    join_transaction_mode = "create_savepoint"
-    expire_on_commit = False
-
-    def commit(self):
-        if self.in_nested_transaction():
-            self.flush()
-        else:
-            super().commit()
-
+from utils_flask_sqla.tests.utils import TestSession
 
 db = SQLAlchemy(session_options={"class_": TestSession})
 
