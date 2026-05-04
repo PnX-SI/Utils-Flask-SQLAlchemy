@@ -107,10 +107,9 @@ class GenericTable:
 
         try:
             with db.engine.connect() as conn:
-                metadata = sa.MetaData(bind=conn)
                 self.tableDef = sa.Table(
                     tableName,
-                    metadata,
+                    db.metadata,
                     schema=schemaName,
                     autoload_with=conn,
                 )

@@ -56,8 +56,8 @@ class SmartRelationshipsMixin:
                 excluded_fields.add(name)
             elif (
                 hasattr(self.opts, "model")
-                and hasattr(self.opts.model.__mapper__.column_attrs, name)
-                and getattr(self.opts.model.__mapper__.column_attrs, name).deferred
+                and hasattr(self.opts.model.__mapper__.attrs, name)
+                and getattr(self.opts.model.__mapper__.attrs, name).deferred
             ):
                 excluded_fields.add(name)
             else:
