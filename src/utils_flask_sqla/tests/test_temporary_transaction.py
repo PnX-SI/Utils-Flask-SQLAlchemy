@@ -3,8 +3,9 @@ from tempfile import NamedTemporaryFile
 import pytest
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+from utils_flask_sqla.tests.utils import TestSession
 
-db = SQLAlchemy()
+db = SQLAlchemy(session_options={"class_": TestSession})
 
 
 class MyModel(db.Model):
