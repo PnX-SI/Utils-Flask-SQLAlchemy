@@ -1,13 +1,71 @@
-[tool.pytest.ini_options]
-minversion = "6.0"
-testpaths = [
-    "src",
+[build-system]
+requires = ["setuptools>=77.0.3", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "utils-flask-sqlalchemy"
+dynamic = ["version"]
+description = "Python lib of tools for Flask and SQLAlchemy"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "GNU Affero General Public License v3" }
+maintainers = [
+    { name = "Parcs nationaux des Écrins et des Cévennes", email = "geonature@ecrins-parcnational.fr" }
+]
+classifiers = [
+    "Development Status :: 1 - Planning",
+    "Intended Audience :: Developers",
+    "Natural Language :: English",
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: GNU Affero General Public License v3",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "flask",
+    "flask-sqlalchemy",
+    "flask-migrate",
+    "marshmallow",
+    "python-dateutil",
+    "sqlalchemy<2",
 ]
 
-[tool.coverage.run]
-omit = [
-    "*/tests/*",
+[project.optional-dependencies]
+tests = [
+    "pytest",
+    "geoalchemy2",
+    "shapely",
+    "jsonschema",
+    "flask-marshmallow",
+    "marshmallow-sqlalchemy",
 ]
+
+[project.urls]
+Homepage = "https://github.com/PnX-SI/Utils-Flask-SQLAlchemy"
+
+[project.entry-points.alembic]
+migrations = "utils_flask_sqla.migrations:versions"
+
+[project.entry-points."pytest11"]
+sqla = "utils_flask_sqla.tests.plugin"
+
+[project.entry-points."flask.commands"]
+db = "utils_flask_sqla.commands:db_cli"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.dynamic]
+version = { file = "VERSION" }
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+testpaths = ["src"]
+
+[tool.coverage.run]
+omit = ["*/tests/*"]
 
 [tool.black]
 line-length = 99
