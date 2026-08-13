@@ -3,6 +3,7 @@ from tempfile import NamedTemporaryFile
 import pytest
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+from utils_flask_sqla.tests.utils import TestSession
 
 db = SQLAlchemy()
 
@@ -25,6 +26,13 @@ def _app():
 
 @pytest.fixture(scope="session")
 def _session(_app):
+    # Reconfigure the existing db.session in place (rather than assigning a new
+    # scoped_session) so that code caching a reference to db.session at import
+    # time (e.g. session = db.session) keeps working against the same object.
+    # sessionmaker.configure() does not special-case class_ (that's only done in
+    # __init__), so the class must be swapped on session_factory directly.
+    db.session.session_factory.class_ = TestSession
+    db.session.remove()
     return db.session
 
 

@@ -1,5 +1,4 @@
 import pytest
-from sqlalchemy.event import listen, remove
 
 """
 We open a nested transaction at each scope, and this nested transaction is rollback at teardown,
@@ -12,13 +11,14 @@ Instead, in your fixtures, create a dedicated nested transaction:
         # do changes to database
     # there, changes are visible, and the parent transation remain open
 
-At function scope level, and only at function scope level, we have a mechanism to detect calls to
-commit() and automatically restart a nested transaction, allowing to keep an outer transaction
-always open until the end of the test, where then all changes are rollback.
-This mechanism is in place at function scope level in order to handle commit() in tested code. But
-it is not available at other scopes, so, as stated before, do not use commit() in your fixtures
-(including function scoped fixtures in order to avoid mistakes, although it may work
-theoretically).
+TestSession (see utils.py) is what makes commit()/rollback() in tested code safe: commit() only
+flushes instead of ending the current savepoint, and rollback() rolls back to the nearest savepoint
+and immediately reopens one, so the outer transaction stays open until the end of the test. Because
+of this, this fixture opens an extra, disposable savepoint on top of the one it owns for teardown,
+so tested code's commit()/rollback() calls never touch the fixture's own transaction directly. This
+protection is only meaningful at function scope, where tested code actually runs, so, as stated
+before, do not use commit() in your fixtures (including function scoped fixtures in order to avoid
+mistakes, although it may work theoretically).
 
 The temporary transaction fixtures must be called before regular fixtures to be able to rollback
 database changes. Decorator @pytest.usefixtures() add fixtures at the end of required fixtures
@@ -96,26 +96,12 @@ def temporary_function_transaction(request):
     # This is particularly important to test raiseload loading strategy.
     _session.expire_all()
 
-    # Ensure an empty session cache before each test
-    # This is particularly important to test raiseload loading strategy.
-    _session.expire_all()
-
     outer_transaction = _session.begin_nested()
-    inner_transaction = _session.begin_nested()
-
-    def restart_savepoint(session, transaction):
-        nonlocal inner_transaction
-        if transaction == inner_transaction:
-            session.expire_all()
-            inner_transaction = session.begin_nested()
-
-    listen(_session, "after_transaction_end", restart_savepoint)
+    _session.begin_nested()  # disposable savepoint consumed by tested code's commit()/rollback()
 
     yield outer_transaction
 
-    remove(_session, "after_transaction_end", restart_savepoint)
-
-    inner_transaction.rollback()  # probably rollback not so much
+    _session().get_nested_transaction().rollback()  # whatever TestSession left active
     outer_transaction.rollback()  # rollback all changes made during this test
 
 
