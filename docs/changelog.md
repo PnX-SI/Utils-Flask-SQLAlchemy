@@ -1,4 +1,10 @@
 # CHANGELOG
+## 0.5.0 (unreleased)
+
+**🚀 Nouveautés**
+
+- Passage à SQLAlchemy 2.0.x (#67 par @jacquesfize)
+
 ## 0.4.5 (2026-02-18)
 
 **🐛 Corrections**
