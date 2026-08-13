@@ -11,7 +11,8 @@ from uuid import UUID
 
 from sqlalchemy.orm import ColumnProperty
 from sqlalchemy import inspect
-from sqlalchemy.ext.hybrid import hybrid_property, HYBRID_PROPERTY
+from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.ext.hybrid import HybridExtensionType
 from sqlalchemy.types import DateTime, Date, Time
 from sqlalchemy.dialects.postgresql.base import UUID
 
@@ -27,6 +28,8 @@ SERIALIZERS = {
     "uuid": lambda x: str(x) if x else None,
     "numeric": lambda x: str(x) if x else None,
 }
+
+HYBRID_PROPERTY = HybridExtensionType.HYBRID_PROPERTY
 
 
 def get_serializer(col):
