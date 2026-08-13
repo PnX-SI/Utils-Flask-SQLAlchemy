@@ -26,7 +26,7 @@ dependencies = [
     "flask-migrate",
     "marshmallow",
     "python-dateutil",
-    "sqlalchemy<2",
+    "sqlalchemy<3",
 ]
 
 [project.optional-dependencies]
@@ -37,6 +37,7 @@ tests = [
     "jsonschema",
     "flask-marshmallow",
     "marshmallow-sqlalchemy",
+    "psycopg2-binary",
 ]
 
 [project.urls]
@@ -63,6 +64,9 @@ version = { file = "VERSION" }
 [tool.pytest.ini_options]
 minversion = "6.0"
 testpaths = ["src"]
+markers = [
+    "postgresql: tests requiring a running PostgreSQL database (see TEST_PG_DATABASE_URI env var)",
+]
 
 [tool.coverage.run]
 omit = ["*/tests/*"]
