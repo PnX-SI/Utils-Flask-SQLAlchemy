@@ -16,11 +16,11 @@ CSV_FIELDNAMES = [
     "schema",
     "fk_column",
     "fk_value",
-    "nb_lignes_affectees",
+    "nb_affected_lines",
 ]
 
 
-def get_referencing_tables(table_name, db, schema="", exclude_tables=None):
+def get_referencing_tables(table_name, db, schema="", exclude_tables=[]):
     """Trouve toutes les tables qui ont des FK pointant vers table_name,
     en excluant les tables listées dans exclude_tables (même schéma)."""
     exclude_tables = set(exclude_tables or [])
@@ -32,13 +32,10 @@ def get_referencing_tables(table_name, db, schema="", exclude_tables=None):
             continue
         try:
             for other_table in inspector.get_table_names(schema=other_schema):
-                if other_schema == schema and other_table in exclude_tables:
+                if other_table != table_name and other_table in exclude_tables:
                     continue
                 for fk in inspector.get_foreign_keys(other_table, schema=other_schema):
-                    referred_schema = fk.get("referred_schema") or other_schema
-                    if fk["referred_table"] == table_name and (
-                        not schema or referred_schema == schema
-                    ):
+                    if fk["referred_table"] == f"{schema}.{table_name}":
                         referencing_tables.append(
                             {
                                 "schema": other_schema,
@@ -68,13 +65,13 @@ def collect_orphan_rows(ref_table, new_ref_table, pk_col, db, schema="", exclude
         ref_t = sa_table(new_ref_table, sa_column(pk_col), schema=schema)
         subq = select(1).select_from(ref_t).where(ref_t.c[pk_col] == src.c[fk_col])
         stmt = (
-            select(src.c[fk_col], func.count().label("nb_lignes"))
+            select(src.c[fk_col], func.count().label("nb_lines"))
             .where(src.c[fk_col].isnot(None))
             .where(~exists(subq))
             .group_by(src.c[fk_col])
             .order_by(src.c[fk_col])
         )
-        for fk_value, nb_lignes in db.session.execute(stmt).fetchall():
+        for fk_value, nb_lines in db.session.execute(stmt).fetchall():
             rows.append(
                 {
                     "ref_table": ref_table,
@@ -82,7 +79,7 @@ def collect_orphan_rows(ref_table, new_ref_table, pk_col, db, schema="", exclude
                     "schema": ref["schema"],
                     "fk_column": fk_col,
                     "fk_value": fk_value,
-                    "nb_lignes_affectees": nb_lignes,
+                    "nb_affected_lines": nb_lines,
                 }
             )
     return rows
