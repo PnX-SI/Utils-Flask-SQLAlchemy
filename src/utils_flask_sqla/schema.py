@@ -1,7 +1,6 @@
 from marshmallow.fields import Nested
 from marshmallow_sqlalchemy.fields import RelatedList, Related
-
-# from flask_marshmallow.fields import RelatedList
+from sqlalchemy.orm import ColumnProperty
 
 
 class SmartRelationshipsMixin:
@@ -54,12 +53,12 @@ class SmartRelationshipsMixin:
                 nested_fields.add(name)
             elif field.metadata.get("exclude", False):
                 excluded_fields.add(name)
-            elif (
-                hasattr(self.opts, "model")
-                and hasattr(self.opts.model.__mapper__.attrs, name)
-                and getattr(self.opts.model.__mapper__.attrs, name).deferred
-            ):
-                excluded_fields.add(name)
+            elif hasattr(self.opts, "model") and hasattr(self.opts.model.__mapper__.attrs, name):
+                column_prop = getattr(self.opts.model.__mapper__.attrs, name)
+                if isinstance(column_prop, ColumnProperty) and column_prop.deferred is True:
+                    excluded_fields.add(name)
+                else:
+                    included_fields.add(name)
             else:
                 included_fields.add(name)
 

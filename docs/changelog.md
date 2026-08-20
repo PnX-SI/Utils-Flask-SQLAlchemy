@@ -5,6 +5,10 @@
 
 - Passage à SQLAlchemy 2.0.x (#67 par @jacquesfize)
 
+**🐛 Corrections**
+
+- Correction de la prise en compte des colonnes _deferred_ dans `SmartRelationshipsMixin` (#74 par @jacquesfize)
+
 ## 0.4.5 (2026-02-18)
 
 **🐛 Corrections**
