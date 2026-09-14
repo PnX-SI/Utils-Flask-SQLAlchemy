@@ -1,15 +1,17 @@
 import os
 import os.path
 import logging
-from contextlib import ExitStack
+from contextlib import ExitStack, contextmanager
 from tempfile import TemporaryDirectory
 from shutil import copyfileobj
 from urllib.request import urlopen
 from contextlib import suppress
+import lzma
+
 from sqlalchemy.sql import visitors
 
 
-class remote_file(ExitStack):
+class remote_file:
     """
     Ce contextmanager renvoit le chemin d’accès d’un fichier après l’avoir préalablement téléchargé.
     """
@@ -20,20 +22,32 @@ class remote_file(ExitStack):
         self.filename = filename
         self.data_dir = data_dir or os.environ.get("DATA_DIRECTORY")
         self.logger = logger or logging.getLogger(__name__)
+        self.stack = ExitStack()
 
     def __enter__(self):
-        super().__enter__()
+        self.stack.__enter__()
         if not self.data_dir:
-            self.data_dir = self.enter_context(TemporaryDirectory())
+            self.data_dir = self.stack.enter_context(TemporaryDirectory())
             self.logger.info("Created temporary directory '{}'".format(self.data_dir))
         if not os.path.exists(self.data_dir):
             os.mkdir(self.data_dir)
         remote_file_path = os.path.join(self.data_dir, self.filename)
         if not os.path.isfile(remote_file_path):
-            self.logger.info("Downloading '{}'…".format(self.filename))
+            self.logger.info("Downloading '{}'…".format(self.url))
             with urlopen(self.url) as response, open(remote_file_path, "wb") as remote_file:
                 copyfileobj(response, remote_file)
         return remote_file_path
+
+    def __exit__(self, exc_type, exc, tb):
+        return self.stack.__exit__(exc_type, exc, tb)
+
+
+@contextmanager
+def open_remote_file(base_url, filename, open_fct=lzma.open, *args, **kwargs):
+    url = "{}{}".format(base_url, filename)
+    with remote_file(url=url, filename=filename, *args, **kwargs) as remote:
+        with open_fct(remote) as opened_remote:
+            yield opened_remote
 
 
 def is_already_joined(my_class, query):
