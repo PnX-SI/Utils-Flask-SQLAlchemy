@@ -6,6 +6,7 @@ import json
 import click
 import flask_migrate
 from flask import current_app
+import sqlalchemy as sa
 from alembic.migration import MigrationContext
 from alembic.context import EnvironmentContext
 from alembic.script import ScriptDirectory
@@ -55,7 +56,7 @@ def exec(command, commit, json_output):
     db = current_app.extensions["sqlalchemy"]
     results = []
     for cmd in command:
-        results.append(db.session.execute(cmd))
+        results.append(db.session.execute(sa.text(cmd)))
     if commit:
         db.session.commit()
     if json_output:
