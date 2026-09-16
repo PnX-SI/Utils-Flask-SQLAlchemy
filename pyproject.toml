@@ -38,6 +38,7 @@ tests = [
     "flask-marshmallow",
     "marshmallow-sqlalchemy",
     "psycopg2-binary",
+    "pytest-cov"
 ]
 
 [project.urls]
