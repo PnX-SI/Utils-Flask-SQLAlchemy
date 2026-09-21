@@ -35,9 +35,10 @@ def get_referencing_tables(table_name, db, schema="", exclude_tables=[]):
                 if other_table != table_name and other_table in exclude_tables:
                     continue
                 for fk in inspector.get_foreign_keys(other_table, schema=other_schema):
-                    if fk["referred_table"] == table_name and (
-                        fk.get("referred_schema") or schema
-                    ) == schema:
+                    if fk["referred_table"] == f"{schema}.{table_name}" or (
+                        fk["referred_table"] == table_name
+                        and (fk.get("referred_schema") or schema) == schema
+                    ):
                         referencing_tables.append(
                             {
                                 "schema": other_schema,
