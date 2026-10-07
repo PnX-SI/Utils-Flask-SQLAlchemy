@@ -7,6 +7,8 @@ NAMES = [
     "DUPONT Anny",
     "Aménagement du territoire",
     "Forêts de montagne",
+    "CA-2020-inventaire",
+    "9409111b-4783-426f-9c57-1083718292a5",
     None,
 ]
 
@@ -47,7 +49,22 @@ class TestFulltextPostgreSQL:
 
     def test_prefix(self, pg_conn_unaccent):
         assert search(pg_conn_unaccent, "amén") == ["Aménagement du territoire"]
-        assert search(pg_conn_unaccent, "dup an") == ["DUPONT Anny"]
+        assert search(pg_conn_unaccent, "dupont an") == ["DUPONT Anny"]
+
+    def test_dashes_do_not_break_words(self, pg_conn_unaccent):
+        # "-2020" would be read as a negative number without replacing punctuation by spaces
+        for text in ("CA", "ca-", "CA-2020", "ca-2020-inv", "2020", "inventaire ca"):
+            assert search(pg_conn_unaccent, text) == ["CA-2020-inventaire"], text
+
+    def test_uuid_by_beginning_or_fragment(self, pg_conn_unaccent):
+        uuid = "9409111b-4783-426f-9c57-1083718292a5"
+        for text in ("9409", "9409111B-47", uuid[:13], uuid, "4783", "1083718292a5"):
+            assert search(pg_conn_unaccent, text) == [uuid], text
+
+    def test_only_the_last_word_is_a_prefix(self, pg_conn_unaccent):
+        # "ca" must not match "carte": the other words are complete
+        assert search(pg_conn_unaccent, "ca-2") == ["CA-2020-inventaire"]
+        assert search(pg_conn_unaccent, "dup anny") == []
 
     def test_stemming(self, pg_conn_unaccent):
         assert search(pg_conn_unaccent, "forêt") == ["Forêts de montagne"]
@@ -57,7 +74,7 @@ class TestFulltextPostgreSQL:
 
     def test_null_columns_are_ignored(self, pg_conn_unaccent):
         # the row with a NULL name is still searchable on its other columns
-        assert search(pg_conn_unaccent, "description 3", "name", "descr") == [None]
+        assert search(pg_conn_unaccent, "description 5", "name", "descr") == [None]
 
     def test_syntax_injection_is_harmless(self, pg_conn_unaccent):
         assert search(pg_conn_unaccent, "anny'); drop table fts_test; --") == []

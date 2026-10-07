@@ -34,6 +34,8 @@ def fts_document(*columns, config=DEFAULT_FTS_CONFIG):
     """
     Build an accent-insensitive ``tsvector`` from text columns.
 
+    Punctuation separates words.
+
     Parameters
     ----------
     *columns : sqlalchemy.sql.ColumnElement
@@ -46,21 +48,30 @@ def fts_document(*columns, config=DEFAULT_FTS_CONFIG):
     sqlalchemy.sql.ColumnElement
         The ``tsvector`` expression.
     """
-    return func.to_tsvector(_regconfig(config), func.unaccent(func.concat_ws(" ", *columns)))
+    # punctuation is replaced by spaces: the PostgreSQL parser would read "CA-2020" as the words
+    # "ca" and "-2020" (a negative number), which a search for "2020" would not find
+    text = func.regexp_replace(
+        func.unaccent(func.concat_ws(" ", *columns)), r"[^[:alnum:]]+", " ", "g"
+    )
+    return func.to_tsvector(_regconfig(config), text)
 
 
 def fts_query(search, *, prefix=True, config=DEFAULT_FTS_CONFIG):
     """
     Build an accent-insensitive ``tsquery`` matching all the words of a text.
 
-    Only the words of `search` are kept, so it is safe to give it as typed by a user.
+    Only the words (letters and digits) of `search` are kept, so it is safe to give it as typed by
+    a user. Punctuation, such as the dashes of "CA-2020" or of an UUID, separates words, like in
+    `fts_document`.
 
     Parameters
     ----------
     search : str or None
         Text to search.
     prefix : bool, default True
-        Match each word as a prefix, so that results follow what is being typed.
+        Match the last word as a prefix, so that results follow what is being typed: the other
+        words are complete, otherwise "ca-1" would match any text with a word beginning with
+        "ca" ("carte") and another one beginning with "1".
     config : str, default "french"
         Name of the PostgreSQL text search configuration.
 
@@ -69,13 +80,12 @@ def fts_query(search, *, prefix=True, config=DEFAULT_FTS_CONFIG):
     sqlalchemy.sql.ColumnElement or None
         The ``tsquery`` expression, or None if `search` holds no word.
     """
-    words = re.findall(r"\w+", search or "")
+    words = re.findall(r"[^\W_]+", search or "")
     if not words:
         return None
-    suffix = ":*" if prefix else ""
-    return func.to_tsquery(
-        _regconfig(config), func.unaccent(" & ".join(f"{word}{suffix}" for word in words))
-    )
+    if prefix:
+        words[-1] += ":*"
+    return func.to_tsquery(_regconfig(config), func.unaccent(" & ".join(words)))
 
 
 def ts_rank(document, query):
