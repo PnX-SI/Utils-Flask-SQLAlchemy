@@ -4,6 +4,7 @@
 **🚀 Nouveautés**
 
 - Passage à SQLAlchemy 2.0.x (#67 par @jacquesfize)
+- Ajout du module `utils_flask_sqla.fulltext` (`fts_document`, `fts_query`, `ts_rank`) pour construire des recherches en texte intégral PostgreSQL insensibles aux accents
 
 **🐛 Corrections**
 
