@@ -1,14 +1,21 @@
 # CHANGELOG
-## 0.5.0 (unreleased)
+## 0.5.0 (2026-10-14)
 
 **🚀 Nouveautés**
 
-- Passage à SQLAlchemy 2.0.x (#67 par @jacquesfize)
-- Ajout du module `utils_flask_sqla.fulltext` (`fts_document`, `fts_query`, `ts_rank`) pour construire des recherches en texte intégral PostgreSQL insensibles aux accents
+- Passage à SQLAlchemy 2.0.x et compatibilité avec Flask-SQLAlchemy 3.1 (#67 par @jacquesfize)
+- Utilisation de `uv` dans l'intégration continue (#77 par @jacquesfize)
+- Abandon du support de Python 3.9 et suppression du fichier `setup.py` au profit d'un `pyproject.toml` (#70 par @jacquesfize)
+- Ajout du module `utils_flask_sqla.fulltext` (`fts_document`, `fts_query`, `ts_rank`) pour construire des recherches en texte intégral PostgreSQL insensibles aux accents (#79 par @jacquesfize)
+- Ajout du module `utils_flask_sqla.referential` (`get_referencing_tables`, `collect_orphan_rows`, `export_orphans_to_csv`) pour faciliter la gestion et la migration de référentiels (#72 par @Pierre-Narcisi)
+- Ajout de fonctions SQL `pg_capture_dependent_views`, `pg_drop_dependent_views`, `pg_recreate_dependent_views` et de son _wrapper_ Python `utils_flask_sqla.revision.alter_table_with_dependent_views` pour modifier une table dont dépendent des vues (#67 par @jacquesfize)
 
 **🐛 Corrections**
 
-- Correction de la prise en compte des colonnes _deferred_ dans `SmartRelationshipsMixin` (#74 par @jacquesfize)
+- Correction de la prise en compte des colonnes _deferred_ dans `SmartRelationshipsMixin` (#73 par @jacquesfize)
+- Correction du calcul de `total_filtered` qui ne réinitialisait pas l'_offset_ de la requête (#75 par @jacquesfize)
+- Correction de la commande `flask db exec` avec SQLAlchemy 2.0 (ajout de `sa.text`) (#78 par @bouttier)
+- Utilisation de la connexion de la session pour récupérer les clés étrangères dans `get_referencing_tables` (@jacquesfize)
 
 ## 0.4.5 (2026-02-18)
 
