@@ -18,11 +18,11 @@ depends_on = None
 
 def upgrade():
     op.execute("""
-        CREATE COLLATION fr_numeric (provider = icu, locale = 'fr_FR.UTF-8@colNumeric=yes')
+        CREATE COLLATION public.fr_numeric (provider = icu, locale = 'fr_FR.UTF-8@colNumeric=yes')
         """)
 
 
 def downgrade():
     op.execute("""
-        DROP COLLATION fr_numeric
+        DROP COLLATION public.fr_numeric
         """)
