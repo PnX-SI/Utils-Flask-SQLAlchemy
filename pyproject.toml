@@ -8,7 +8,8 @@ dynamic = ["version"]
 description = "Python lib of tools for Flask and SQLAlchemy"
 readme = "README.md"
 requires-python = ">=3.10"
-license = { text = "GNU Affero General Public License v3" }
+license = "AGPL-3.0-only"
+license-files = ["LICENSE"]
 maintainers = [
     { name = "Parcs nationaux des Écrins et des Cévennes", email = "geonature@ecrins-parcnational.fr" }
 ]
@@ -17,7 +18,6 @@ classifiers = [
     "Intended Audience :: Developers",
     "Natural Language :: English",
     "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: GNU Affero General Public License v3",
     "Operating System :: OS Independent",
 ]
 dependencies = [
